@@ -4,8 +4,11 @@ Primary Key packageName
 Tainer (trainerNumber, fname, lname, phoneNumber)
 Primary Key trainerNumber
 
-Course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber, day, hour, minute, duration)
-Primary Key className, startDate, day; Foreign Key: trainerNumber;
+Course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber)
+Primary Key: className, startDate
+
+Schedule (className, startDate day, hour, minute, duration)
+Primary Key: className, startDate, day
 
 Member (memberNumber, fname, lname, phoneNumber, levelId)
 Primary Key memberNumber; Foreign Key: levelId
