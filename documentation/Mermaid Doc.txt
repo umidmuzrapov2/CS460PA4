@@ -1,0 +1,69 @@
+---
+title: GYM 460
+---
+erDiagram
+    Member{
+        integer memberNumber PK 
+        varchar(20) fname           "Up to 20 characters"
+        varcahr(20) lname           "Up to 20 characters"
+        varchar(10) phoneNumber UK  "e.g. 520 123 45 67."
+        integer levelID FK          
+    }
+
+    Course{
+        varchar(20) className  PK
+        date    startDate      PK
+        integer maxParticipant      "Must be <=60"
+        integer currentParticipant  "Must be <=maxParticipant"
+        date    endDate             "endDate > startDate"
+        integer trainerNumber   FK
+    }
+
+    Schedule{
+        varchar(20) className   PK    "Also FK"
+        date        startDate   PK    "Also FK"
+        integer     day         PK    "class occurs once in a day at most"
+        integer     hour        
+        integer     minute      
+    }
+
+    Trainer{
+        integer trainerNumber   PK
+        varchar(20) fname       "Up to 20 characters"
+        varchar lname           "Up to 20 characters"
+        varchar phoneNumber UK  "e.g. 520 123 45 67"
+    }
+
+    Level{
+        integer levelID PK
+        float   minSpending "Must be >=0"
+        float   discount    "Must be <=50"
+    }
+
+    Transaction{
+        integer transactionNumber   PK
+        integer total               "Must be <=2000"
+        date    transactionDate
+        varchar(20) type    "Create domain with possible types"
+        integer memberNumber    FK
+    }
+
+    Equipment{
+        integer itemNumber  PK
+        varchar(40) description "Descriptive name for the equipment"
+        integer quantity    "Must be >=0"
+    }
+
+    Package{
+        varchar packageName PK
+        float   cost    "Must be >=0"
+    }
+
+    Member }o--o{ Package : purchases
+    Package }|--|{ Course: contains
+    Trainer ||--o{ Course: teaches
+    Member ||--o{ Transaction: makes
+    Member }|--|{ Equipment: borrows
+    Member }|--|| Level : has
+    Member }o--o{ Course : enrolls
+    Course ||--o{ Schedule: has
