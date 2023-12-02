@@ -33,9 +33,9 @@ public class DBClient {
 		// aloe access spell
 		final String oracleURL = "jdbc:oracle:thin:@aloe.cs.arizona.edu:1521:oracle";
 		// default user
-		String username = "umidmuzrapov";
+		String username = "your username";
 		// default password
-		String password = "a6549";
+		String password = "your password";
 
 		// if the user gave their username and password
 		if (args.length == 2) {
