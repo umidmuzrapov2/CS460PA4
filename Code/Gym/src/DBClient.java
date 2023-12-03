@@ -1,13 +1,5 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.sql.*;
+import java.util.*;
 
 
 public class DBClient {
@@ -69,4 +61,113 @@ public class DBClient {
 
 		return dbconn;
 	}
+	
+	/**
+	 * 
+	 * @param firstName
+	 * @param lastName
+	 * @param phoneNumber
+	 * @param levelId
+	 * @return
+	 */
+	public boolean addMember(String firstName, String lastName, String phoneNumber, int levelId) {
+	    try {
+	        // Create a SQL statement to insert a new member into the database
+	        String insertQuery = "INSERT INTO MEMBER (MEMBERNUMBER, FNAME, LNAME, PHONENUMBER, LEVELID) " +
+	                             "VALUES (SEQ_MEMBER.NEXTVAL, ?, ?, ?, ?)";
+	        
+	        PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
+	        preparedStatement.setString(1, firstName);
+	        preparedStatement.setString(2, lastName);
+	        preparedStatement.setString(3, phoneNumber);
+	        preparedStatement.setInt(4, levelId);
+	        
+	        // Execute the SQL statement to add the member
+	        int rowsAffected = preparedStatement.executeUpdate();
+	        
+	        // Check if the member was successfully added
+	        if (rowsAffected > 0) {
+	            return true; // Member added successfully
+	        }
+	        
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    
+	    return false; // Member addition failed
+	}
+	
+	/**
+	 * 
+	 * @param memberNumber
+	 * @return
+	 */
+	public boolean deleteMember(int memberNumber) {
+	    try {
+	        // Check if the member has unreturned equipment
+	        if (hasUnreturnedEquipment(memberNumber)) {
+	            // Mark the equipment as lost and update quantities (you need to implement this logic)
+	            // Return false or handle the case where equipment is unreturned
+	        }
+
+	        // Check if the member has unpaid balances
+	        if (hasUnpaidBalances(memberNumber)) {
+	            // Print unpaid balances and prevent deletion (you need to implement this logic)
+	            // Return false or handle the case where there are unpaid balances
+	        }
+
+	        // Check if the member is actively participating in any courses
+	        if (isParticipatingInCourses(memberNumber)) {
+	            // Delete course participation records and update course spots (you need to implement this logic)
+	        }
+
+	        // If all checks pass, delete the member
+	        String deleteQuery = "DELETE FROM MEMBER WHERE MEMBERNUMBER = ?";
+
+	        PreparedStatement preparedStatement = dbconn.prepareStatement(deleteQuery);
+	        preparedStatement.setInt(1, memberNumber);
+
+	        // Execute the SQL statement to delete the member
+	        int rowsAffected = preparedStatement.executeUpdate();
+
+	        // Check if the member was successfully deleted
+	        if (rowsAffected > 0) {
+	            return true; // Member deleted successfully
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return false; // Member deletion failed
+	}
+
+	/**
+	 * Implement logic to check if the member has unreturned equipment
+	 * 
+	 * Return true if unreturned equipment is found; otherwise, return false
+	 */
+	private boolean hasUnreturnedEquipment(int memberNumber) {
+		return false;
+	}
+
+	/**
+	 * Implement logic to check if the member has unpaid balances
+	 * 
+	 * Return true if unpaid balances are found; otherwise, return false
+	 */
+	private boolean hasUnpaidBalances(int memberNumber) {
+		return false;
+	}
+
+	/**
+	 * Implement logic to check if the member is actively participating in any courses. 
+	 * If so, delete course participation records and update course spots
+	 * 
+	 * Return true if participating in courses; otherwise, return false
+	 */
+	private boolean isParticipatingInCourses(int memberNumber) {
+		return false;
+	}
+
 }
