@@ -1,0 +1,90 @@
+-- Author: Umidjon Muzrapov
+-- Purpose: create relations for Oracle DBMS
+-- Date: 11/1/2023
+
+
+-- drop statements here because I reset my tables a lot. 
+-- remove them if you are creating tables the first time.
+
+DROP TABLE umidmuzrapov.topComputers1993;
+DROP TABLE umidmuzrapov.topComputers2003;
+DROP TABLE umidmuzrapov.topComputers2013;
+DROP TABLE umidmuzrapov.topComputers2023;
+
+CREATE TABLE umidmuzrapov.topComputers1993 (
+        rank integer NOT NULL, 
+        site varchar2(140),
+        manufac varchar2(140), -- manufacturer
+        computer varchar(140),
+        country varchar2(140),
+        year integer,
+        tcores integer, -- total number of cores
+        rmax real, -- rmax value
+        rspeak real, -- theoretical max performance
+        nmax int, -- the problem size used to produce Rmax
+        procspeed real, -- processor speed
+        os varchar2(140), -- operating system
+        arch varchar2(140), -- architecture
+        segment varchar2(140),
+	PRIMARY KEY (rank)
+);
+
+CREATE TABLE umidmuzrapov.topComputers2003 (
+        rank integer NOT NULL,
+        site varchar2(140),
+        manufac varchar2(140), -- manufacturer
+        computer varchar(140), 
+        country varchar2(140),
+        year integer,
+        tcores integer, -- total number of cores
+        rmax real, -- rmax value
+        rspeak real, -- theoretical max performance
+        nmax int, -- the problem size used to produce Rmax
+        procspeed real, -- processor speed
+        os varchar2(140), -- operating system
+        arch varchar2(140), -- architecture
+        segment varchar2(140),
+	PRIMARY KEY (rank)
+);
+
+CREATE TABLE umidmuzrapov.topComputers2013 (
+        rank integer NOT NULL,
+        site varchar2(140),
+        manufac varchar2(140), -- manufecturer
+        computer varchar(140), 
+        country varchar2(140),
+        year integer,
+        tcores integer, -- total cores
+        rmax real, -- rmax value
+        rspeak real, -- theoretical max performance
+        nmax int, -- the problem size used to produce rmax
+        procspeed real, -- processor speed
+        os varchar2(140), -- operating system
+        arch varchar2(140), --architecture
+        segment varchar2(140),
+	PRIMARY KEY(rank)
+);
+
+CREATE TABLE umidmuzrapov.topComputers2023 (
+        rank integer NOT NULL,
+        site varchar2(140),
+        manufac varchar2(140), -- manufacturer
+        computer varchar(140), 
+        country varchar2(140),
+        year integer,
+        tcores integer, -- total cores
+        rmax real, -- rmax value
+        rspeak real, -- theoretical max performance
+        nmax int, -- the problem size sued to produce max
+        procspeed real, -- processor speed
+        os varchar2(140), -- opearting system
+        arch varchar2(140), -- architecture
+        segment varchar2(140),
+	PRIMARY KEY (rank)
+);
+
+-- give public access
+GRANT SELECT ON umidmuzrapov.topComputers1993 TO PUBLIC;
+GRANT SELECT ON umidmuzrapov.topComputers2003 TO PUBLIC;
+GRANT SELECT ON umidmuzrapov.topComputers2013 TO PUBLIC;
+GRANT SELECT ON umidmuzrapov.topComputers2023 TO PUBLIC;

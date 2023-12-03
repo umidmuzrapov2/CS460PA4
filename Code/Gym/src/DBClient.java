@@ -11,6 +11,8 @@ import java.util.Scanner;
 
 
 public class DBClient {
+
+	@SuppressWarnings("unused")
 	private Connection dbconn;
 
 	public DBClient(String[] args) {

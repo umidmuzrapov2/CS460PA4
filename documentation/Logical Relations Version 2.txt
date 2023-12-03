@@ -23,7 +23,7 @@ Level (levelId, minSpending, discount)
 Primary Key levelId
 
 CoursePackage (packageName, className, startDate)
-Primary Key: packageName className startDate; Foreign Key: packageName, className, startDate
+Primary Key: packageName className; Foreign Key: packageName, className, startDate
 
 Purchase (memberNumber, courseName, transactionNumber)
 Primary Key: memberNumber, courseName, transactionNumber;
