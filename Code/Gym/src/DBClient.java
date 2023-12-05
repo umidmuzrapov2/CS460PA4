@@ -1,6 +1,6 @@
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
-
 
 public class DBClient {
 
@@ -61,7 +61,7 @@ public class DBClient {
 
 		return dbconn;
 	}
-	
+
 	/**
 	 * 
 	 * @param firstName
@@ -71,75 +71,144 @@ public class DBClient {
 	 * @return
 	 */
 	public boolean addMember(String firstName, String lastName, String phoneNumber, int levelId) {
-	    try {
-	        // Create a SQL statement to insert a new member into the database
-	        String insertQuery = "INSERT INTO MEMBER (MEMBERNUMBER, FNAME, LNAME, PHONENUMBER, LEVELID) " +
-	                             "VALUES (SEQ_MEMBER.NEXTVAL, ?, ?, ?, ?)";
-	        
-	        PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
-	        preparedStatement.setString(1, firstName);
-	        preparedStatement.setString(2, lastName);
-	        preparedStatement.setString(3, phoneNumber);
-	        preparedStatement.setInt(4, levelId);
-	        
-	        // Execute the SQL statement to add the member
-	        int rowsAffected = preparedStatement.executeUpdate();
-	        
-	        // Check if the member was successfully added
-	        if (rowsAffected > 0) {
-	            return true; // Member added successfully
-	        }
-	        
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-	    
-	    return false; // Member addition failed
+		try {
+			dbconn.setAutoCommit(false); // Start transaction
+
+			// Find the next member number
+			String maxMemberNumberQuery = "select MAX(memberNumber) from umidmuzrapov.member";
+			Statement maxMemberNumberStmt = dbconn.createStatement();
+			ResultSet rs = maxMemberNumberStmt.executeQuery(maxMemberNumberQuery);
+			int nextMemberNumber = 1;
+			if (rs.next()) {
+				nextMemberNumber = rs.getInt(1) + 1;
+			}
+
+			// Create a SQL statement to insert a new member into the database
+			String insertQuery = "insert into umidmuzrapov.member (memberNumber, fname, lname, phoneNumber, levelId) values (?, ?, ?, ?, ?)";
+
+			PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
+			preparedStatement.setInt(1, nextMemberNumber);
+			preparedStatement.setString(2, firstName);
+			preparedStatement.setString(3, lastName);
+			preparedStatement.setString(4, phoneNumber);
+			preparedStatement.setInt(5, levelId);
+
+			// Execute the SQL statement to add the member
+			int rowsAffected = preparedStatement.executeUpdate();
+
+			dbconn.commit(); // Commit transaction if all operations are successful
+			// Check if the member was successfully added
+			if (rowsAffected > 0) {
+				return true; // Member added successfully
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return false; // Member addition failed
 	}
-	
+
 	/**
 	 * 
 	 * @param memberNumber
 	 * @return
 	 */
 	public boolean deleteMember(int memberNumber) {
-	    try {
-	        // Check if the member has unreturned equipment
-	        if (hasUnreturnedEquipment(memberNumber)) {
-	            // Mark the equipment as lost and update quantities (you need to implement this logic)
-	            // Return false or handle the case where equipment is unreturned
-	        }
+		try {
+			dbconn.setAutoCommit(false); // Start transaction
 
-	        // Check if the member has unpaid balances
-	        if (hasUnpaidBalances(memberNumber)) {
-	            // Print unpaid balances and prevent deletion (you need to implement this logic)
-	            // Return false or handle the case where there are unpaid balances
-	        }
+			// Check for unreturned equipment
+			if (hasUnreturnedEquipment(memberNumber)) {
+				// Retrieve unreturned equipment items
+				String unreturnedQuery = "select itemNumber, quantity from umidmuzrapov.equipmentloan where memberItem = ? and returnedDate is NULL";
+				PreparedStatement unreturnedStmt = dbconn.prepareStatement(unreturnedQuery);
+				unreturnedStmt.setInt(1, memberNumber);
+				ResultSet unreturnedItems = unreturnedStmt.executeQuery();
 
-	        // Check if the member is actively participating in any courses
-	        if (isParticipatingInCourses(memberNumber)) {
-	            // Delete course participation records and update course spots (you need to implement this logic)
-	        }
+				// Process each unreturned item
+				while (unreturnedItems.next()) {
+					int itemNumber = unreturnedItems.getInt("itemNumber");
+					int loanedQuantity = unreturnedItems.getInt("quantity");
 
-	        // If all checks pass, delete the member
-	        String deleteQuery = "DELETE FROM MEMBER WHERE MEMBERNUMBER = ?";
+					// Update the Equipment table, marking the equipment as lost and adjusting the
+					// quantity
+					String updateEquipQuery = "update umidmuzrapov.equipment set quantity = quantity - ? where itemNumber = ?";
+					PreparedStatement updateEquipStmt = dbconn.prepareStatement(updateEquipQuery);
+					updateEquipStmt.setInt(1, loanedQuantity);
+					updateEquipStmt.setInt(2, itemNumber);
+					updateEquipStmt.executeUpdate();
+				}
+			}
 
-	        PreparedStatement preparedStatement = dbconn.prepareStatement(deleteQuery);
-	        preparedStatement.setInt(1, memberNumber);
+			// Check if the member has unpaid balances
+			if (hasUnpaidBalances(memberNumber)) {
+				// Retrieve and print unpaid balance information
+				String balanceQuery = "select transactionNumber, total from umidmuzrapov.transaction where memberNumber = ? and (type = 'Unpaid' or type is NULL)";
+				PreparedStatement balanceStmt = dbconn.prepareStatement(balanceQuery);
+				balanceStmt.setInt(1, memberNumber);
+				ResultSet balanceResult = balanceStmt.executeQuery();
 
-	        // Execute the SQL statement to delete the member
-	        int rowsAffected = preparedStatement.executeUpdate();
+				while (balanceResult.next()) {
+					int transactionNumber = balanceResult.getInt("transactionNumber");
+					float total = balanceResult.getFloat("total");
+					System.out.println(
+							"Unpaid Balance - Transaction Number: " + transactionNumber + ", Amount: " + total);
+				}
 
-	        // Check if the member was successfully deleted
-	        if (rowsAffected > 0) {
-	            return true; // Member deleted successfully
-	        }
+				dbconn.rollback(); // Rollback transaction
+				return false; // Prevent deletion due to unpaid balances
+			}
 
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
+			// Check if the member is actively participating in any courses
+			if (isParticipatingInCourses(memberNumber)) {
+				// Retrieve courses that the member is enrolled in
+				String enrolledCoursesQuery = "select courseName, startDate from umidmuzrapov.enrollment where memberNumber = ?";
+				PreparedStatement enrolledStmt = dbconn.prepareStatement(enrolledCoursesQuery);
+				enrolledStmt.setInt(1, memberNumber);
+				ResultSet enrolledCourses = enrolledStmt.executeQuery();
 
-	    return false; // Member deletion failed
+				while (enrolledCourses.next()) {
+					String courseName = enrolledCourses.getString("courseName");
+					String startDate = enrolledCourses.getString("startDate");
+
+					// Delete the enrollment record
+					String deleteEnrollmentQuery = "delete from umidmuzrapov.enrollment where memberNumber = ? and courseName = ? and startDate = ?";
+					PreparedStatement deleteEnrollmentStmt = dbconn.prepareStatement(deleteEnrollmentQuery);
+					deleteEnrollmentStmt.setInt(1, memberNumber);
+					deleteEnrollmentStmt.setString(2, courseName);
+					deleteEnrollmentStmt.setString(3, startDate);
+					deleteEnrollmentStmt.executeUpdate();
+
+					// Update available spots in the course
+					String updateCourseQuery = "update umidmuzrapov.course set currentParticipant = currentParticipant - 1 where className = ? and startDate = ?";
+					PreparedStatement updateCourseStmt = dbconn.prepareStatement(updateCourseQuery);
+					updateCourseStmt.setString(1, courseName);
+					updateCourseStmt.setString(2, startDate);
+					updateCourseStmt.executeUpdate();
+				}
+			}
+
+			// If all checks pass, delete the member
+			String deleteQuery = "delete from umidmuzrapov.member where memberNumber = ?";
+
+			PreparedStatement preparedStatement = dbconn.prepareStatement(deleteQuery);
+			preparedStatement.setInt(1, memberNumber);
+
+			// Execute the SQL statement to delete the member
+			int rowsAffected = preparedStatement.executeUpdate();
+
+			dbconn.commit(); // Commit transaction if all operations are successful
+			// Check if the member was successfully deleted
+			if (rowsAffected > 0) {
+				return true; // Member deleted successfully
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false; // Member deletion failed
+
 	}
 
 	/**
@@ -148,6 +217,18 @@ public class DBClient {
 	 * Return true if unreturned equipment is found; otherwise, return false
 	 */
 	private boolean hasUnreturnedEquipment(int memberNumber) {
+		try {
+			String query = "select count(*) from umidmuzrapov.equipmentloan where memberItem = ? and returnedDate is NULL";
+			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
+			preparedStatement.setInt(1, memberNumber);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			if (resultSet.next()) {
+				return resultSet.getInt(1) > 0;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 
@@ -157,17 +238,292 @@ public class DBClient {
 	 * Return true if unpaid balances are found; otherwise, return false
 	 */
 	private boolean hasUnpaidBalances(int memberNumber) {
+		try {
+			String query = "select count(*) from umidmuzrapov.transaction where memberNumber = ? and (type = 'Unpaid' or type is NULL)";
+			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
+			preparedStatement.setInt(1, memberNumber);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			if (resultSet.next()) {
+				return resultSet.getInt(1) > 0;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 
 	/**
-	 * Implement logic to check if the member is actively participating in any courses. 
-	 * If so, delete course participation records and update course spots
+	 * Implement logic to check if the member is actively participating in any
+	 * courses. If so, delete course participation records and update course spots
 	 * 
 	 * Return true if participating in courses; otherwise, return false
 	 */
 	private boolean isParticipatingInCourses(int memberNumber) {
+		try {
+			String query = "select count(*) from umidmuzrapov.enrollment where memberNumber = ?";
+			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
+			preparedStatement.setInt(1, memberNumber);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			if (resultSet.next()) {
+				return resultSet.getInt(1) > 0;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return false;
+	}
+
+	/**
+	 * 
+	 * @param className
+	 * @param maxParticipant
+	 * @param currentParticipant
+	 * @param startDate
+	 * @param endDate
+	 * @param trainerNumber
+	 * @return
+	 */
+	public boolean addCourse(String className, int maxParticipant, int currentParticipant, Date startDate, Date endDate,
+			int trainerNumber) {
+		try {
+			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
+			PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
+
+			preparedStatement.setString(1, className);
+			preparedStatement.setInt(2, maxParticipant);
+			preparedStatement.setInt(3, currentParticipant);
+			preparedStatement.setDate(4, new java.sql.Date(startDate.getTime()));
+			preparedStatement.setDate(5, new java.sql.Date(endDate.getTime()));
+			preparedStatement.setInt(6, trainerNumber);
+
+			int rowsAffected = preparedStatement.executeUpdate();
+			return rowsAffected > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public boolean deleteCourse(String className, Date startDate) {
+		try {
+			dbconn.setAutoCommit(false);
+
+			// Check for enrolled members
+			String enrolledMembersQuery = "select m.fname, m.lname, m.phoneNumber from umidmuzrapov.member m join umidmuzrapov.enrollment e on m.memberNumber = e.memberNumber where e.courseName = ? and e.startDate = ?";
+			PreparedStatement enrolledStmt = dbconn.prepareStatement(enrolledMembersQuery);
+			enrolledStmt.setString(1, className);
+			enrolledStmt.setDate(2, new java.sql.Date(startDate.getTime()));
+			ResultSet enrolledMembers = enrolledStmt.executeQuery();
+
+			boolean hasEnrolledMembers = false;
+			while (enrolledMembers.next()) {
+				hasEnrolledMembers = true;
+				String memberName = enrolledMembers.getString("fname") + " " + enrolledMembers.getString("lname");
+				String phoneNumber = enrolledMembers.getString("phoneNumber");
+				System.out.println("Member: " + memberName + ", Phone: " + phoneNumber);
+			}
+
+			if (hasEnrolledMembers) {
+				// Notify the admin/user to contact these members before proceeding with
+				// deletion
+				dbconn.rollback();
+				return false; // Prevent deletion until members are notified
+			}
+
+			// Delete the course enrollments
+			String deleteEnrollmentsQuery = "delete from umidmuzrapov.enrollment where courseName = ? and startDate = ?";
+			PreparedStatement deleteEnrollmentsStmt = dbconn.prepareStatement(deleteEnrollmentsQuery);
+			deleteEnrollmentsStmt.setString(1, className);
+			deleteEnrollmentsStmt.setDate(2, new java.sql.Date(startDate.getTime()));
+			deleteEnrollmentsStmt.executeUpdate();
+
+			// Delete the course
+			String deleteCourseQuery = "delete from umidmuzrapov.course where className = ? and startDate = ?";
+			PreparedStatement deleteCourseStmt = dbconn.prepareStatement(deleteCourseQuery);
+			deleteCourseStmt.setString(1, className);
+			deleteCourseStmt.setDate(2, new java.sql.Date(startDate.getTime()));
+			deleteCourseStmt.executeUpdate();
+
+			dbconn.commit();
+			return true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public boolean addCoursePackage(String packageName, List<String[]> selectedCourses) {
+		try {
+			dbconn.setAutoCommit(false);
+
+			for (String[] course : selectedCourses) {
+				String className = course[0];
+				Date startDate = Date.valueOf(course[1]);
+
+				String insertQuery = "insert into umidmuzrapov.coursepackage (packageName, className, startDate) values (?, ?, ?)";
+				PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
+				preparedStatement.setString(1, packageName);
+				preparedStatement.setString(2, className);
+				preparedStatement.setDate(3, startDate);
+				preparedStatement.executeUpdate();
+			}
+
+			dbconn.commit();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public boolean updateCoursePackage(String packageName, List<String[]> updatedCourses) {
+		try {
+			dbconn.setAutoCommit(false);
+
+			if (!canUpdateCoursePackage(packageName, updatedCourses)) {
+				// Handle the case where update is not possible
+				return false;
+			}
+
+			// First, delete existing courses in the package
+			String deleteQuery = "delete from umidmuzrapov.coursepackage where packageName = ?";
+			PreparedStatement deleteStmt = dbconn.prepareStatement(deleteQuery);
+			deleteStmt.setString(1, packageName);
+			deleteStmt.executeUpdate();
+
+			// Then, add the updated courses
+			for (String[] course : updatedCourses) {
+				String className = course[0];
+				Date startDate = Date.valueOf(course[1]);
+
+				String insertQuery = "insert into umidmuzrapov.coursepackage (packageName, className, startDate) values (?, ?, ?)";
+				PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
+				preparedStatement.setString(1, packageName);
+				preparedStatement.setString(2, className);
+				preparedStatement.setDate(3, startDate);
+				preparedStatement.executeUpdate();
+			}
+
+			dbconn.commit();
+			return true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private boolean canUpdateCoursePackage(String packageName, List<String[]> updatedCourses) {
+		try {
+			for (String[] course : updatedCourses) {
+				String className = course[0];
+				Date startDate = Date.valueOf(course[1]);
+
+				String checkQuery = "select count(*) from umidmuzrapov.enrollment e where e.courseName = ? and e.startDate = ?";
+				PreparedStatement checkStmt = dbconn.prepareStatement(checkQuery);
+				checkStmt.setString(1, className);
+				checkStmt.setDate(2, startDate);
+				ResultSet rs = checkStmt.executeQuery();
+
+				if (rs.next() && rs.getInt(1) > 0) {
+					// There are active enrollments in this course
+					return false;
+				}
+			}
+			return true; // Safe to update the package
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public boolean deleteCoursePackage(String packageName) {
+		try {
+			dbconn.setAutoCommit(false);
+
+			if (!canDeleteCoursePackage(packageName)) {
+				// Handle the case where deletion is not possible
+				return false;
+			}
+
+			// Assuming safeguard check passed:
+			String deleteQuery = "delete from umidmuzrapov.coursepackage where packageName = ?";
+			PreparedStatement preparedStatement = dbconn.prepareStatement(deleteQuery);
+			preparedStatement.setString(1, packageName);
+			int rowsAffected = preparedStatement.executeUpdate();
+
+			dbconn.commit();
+			return rowsAffected > 0;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private boolean canDeleteCoursePackage(String packageName) {
+		try {
+			String checkQuery = "select count(*) from umidmuzrapov.enrollment e join umidmuzrapov.coursepackage cp on e.courseName = cp.className and e.startDate = cp.startDate where cp.packageName = ?";
+			PreparedStatement checkStmt = dbconn.prepareStatement(checkQuery);
+			checkStmt.setString(1, packageName);
+			ResultSet rs = checkStmt.executeQuery();
+
+			if (rs.next() && rs.getInt(1) > 0) {
+				// There are active enrollments in this package's courses
+				return false;
+			}
+			return true; // Safe to delete the package
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 }
