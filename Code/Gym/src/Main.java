@@ -116,7 +116,8 @@ public class Main {
     String phone = scanner.nextLine();
 
     // Call DBClient method to add member
-    client.addMember(firstName, lastName, phone);
+    String result = client.addMember(firstName, lastName, phone);
+    System.out.println(result);
     // List course packages and allow member to select
     // Method needs to be implemented here
     //client.listAndSelectCoursePackage();
@@ -126,8 +127,8 @@ public class Main {
     System.out.println("Deleting a member.");
     System.out.print("Enter member's number: ");
     int memberNumber = scanner.nextInt();
-    client.deleteMember(memberNumber);
-    System.out.println("Member " + memberNumber + " deleted!");
+    String result = client.deleteMember(memberNumber);
+    System.out.println(result);
   }
 
   private static void handleQueries(Scanner scanner, DBClient client) {
