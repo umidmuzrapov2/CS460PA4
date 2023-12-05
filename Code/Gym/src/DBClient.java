@@ -121,10 +121,12 @@ public class DBClient {
 				unreturnedStmt.setInt(1, memberNumber);
 				ResultSet unreturnedItems = unreturnedStmt.executeQuery();
 
+				System.out.println("\n The following loaned equipment will be marked as lost:");
 				// Process each unreturned item
 				while (unreturnedItems.next()) {
 					int itemNumber = unreturnedItems.getInt("itemNumber");
 					int loanedQuantity = unreturnedItems.getInt("quantity");
+					System.out.println("Item number: " + itemNumber + " | Quantity: " + loanedQuantity);
 
 					// Update the Equipment table, marking the equipment as lost and adjusting the
 					// quantity
@@ -144,11 +146,11 @@ public class DBClient {
 				balanceStmt.setInt(1, memberNumber);
 				ResultSet balanceResult = balanceStmt.executeQuery();
 
+				System.out.println("\nThe member has unpaid charge(s).");
 				while (balanceResult.next()) {
 					int transactionNumber = balanceResult.getInt("transactionNumber");
 					float total = balanceResult.getFloat("total");
-					System.out.println(
-							"Unpaid Balance - Transaction Number: " + transactionNumber + ", Amount: " + total);
+					System.out.println("Unpaid Balance - Transaction Number: " + transactionNumber + ", Amount: " + total);
 				}
 
 				dbconn.rollback(); // Rollback transaction
@@ -163,9 +165,11 @@ public class DBClient {
 				enrolledStmt.setInt(1, memberNumber);
 				ResultSet enrolledCourses = enrolledStmt.executeQuery();
 
+				System.out.println("\nThe member will be dropped from the following course(s):");
 				while (enrolledCourses.next()) {
 					String courseName = enrolledCourses.getString("courseName");
 					String startDate = enrolledCourses.getString("startDate");
+					System.out.println(courseName);
 
 					// Delete the enrollment record
 					String deleteEnrollmentQuery = "delete from umidmuzrapov.enrollment where memberNumber = ? and courseName = ? and startDate = ?";
