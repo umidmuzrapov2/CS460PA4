@@ -25,12 +25,12 @@ Primary Key levelId
 CoursePackage (packageName, className, startDate)
 Primary Key: packageName, className, startDate; Foreign Key: packageName, className, startDate
 
-Purchase (memberNumber, packageName, transactionNumber)
-Primary Key: memberNumber, courseName, transactionNumber;
-Foreign Key: memberNumber, courseName, transactionNumber;
+Purchase (packageName, transactionNumber)
+Primary Key: packageName, transactionNumber;
+Foreign Key: packageName, transactionNumber;
 
 EquipmentLoan (loanNumber, itemNumber, memberItem, quantity, borrowedDate, returnedDate)
 Primary key: loanNumber; Foreign Key: itemNumber, memberNumber
 
 Enrollment (memberNumber, courseName, startDate)
-Primary Key: memberNumber, courseName, startDate
+Primary Key: memberNumber, courseName, startDate; Foreign Key: memberNumber, courseName, startDate.
