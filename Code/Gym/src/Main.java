@@ -193,6 +193,7 @@ public class Main {
     
     System.out.print("Enter current number of course participants: ");
     int curParticipants = scanner.nextInt();
+    scanner.nextLine();
     
     System.out.print("Enter course start date (yyyy-mm-dd): ");
     Date startDate = Date.valueOf(scanner.nextLine());
@@ -305,10 +306,11 @@ public class Main {
 		  } else {
 			  System.out.println("Schedule is noted.");
 			  schedules.add(schedule);
-			  System.out.println("Enter the schedule for course or done:");
-			  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
-			  line = keyboard.nextLine();
 		  }
+		  
+		  System.out.println("Enter the schedule for course or done:");
+		  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
+		  line = keyboard.nextLine();
 	  }
 	  
 	  return schedules;
@@ -318,7 +320,7 @@ public class Main {
   {
 	  List<Integer> schedule = new ArrayList<Integer>();
 	  String[] words = line.split(",");
-      Map<String, Integer> dayOfWeekMap = new HashMap<>();
+      Map<String, Integer> dayOfWeekMap = new HashMap<String, Integer>();
       
       // Adding entries to the map
       dayOfWeekMap.put("Monday", 1);
@@ -330,19 +332,23 @@ public class Main {
       dayOfWeekMap.put("Sunday", 7);
       
       if (words.length !=4) {
+    	  System.out.println("The wrong number of arguments.");
     	  return null;
       }
       
-      if (!dayOfWeekMap.containsKey(words)) {
+      if (!dayOfWeekMap.containsKey(words[0])) {
+    	  System.out.println("The day of the week does not exist.");
     	  return null;
       }
 	  
+      schedule.add(dayOfWeekMap.get(words[0]));
       for (int i =1; i<4; i++) {
     	  int numericVal = isNumeric(words[i]);
     	  
     	  if (numericVal>=0) {
     		  schedule.add(numericVal);
     	  } else {
+    		  System.out.println("String given when integer was expected."+words[i]);
     		  return null;
     	  }
       }
@@ -354,7 +360,7 @@ public class Main {
   
   private static int isNumeric(String numberString) {
 		try {
-			return Integer.parseInt(numberString);
+			return Integer.parseInt(numberString.trim());
 		}
 		catch(NumberFormatException ex) {
 			return -1;

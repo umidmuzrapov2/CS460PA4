@@ -290,6 +290,8 @@ public class DBClient {
 			if (trainerNumber<0) {
 				System.out.println("No instructor is available for the schedule.");
 				return false;
+			} else {
+				System.out.printf("Trainer with id: %d was chosen for this course.\n", trainerNumber);
 			}
 			
 			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
@@ -328,7 +330,7 @@ public class DBClient {
 		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)"
 				+ " MINUS"
 				+ " (SELECT t.trainerNumber"
-				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course"
+				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c"
 				+ " WHERE t.trainerNumber = c.trainerNumber)";
 
 		ResultSet result = statement.executeQuery(queryOne);
@@ -338,21 +340,23 @@ public class DBClient {
 		}
 		else {
 			StringBuilder queryTwo = new StringBuilder();
-			queryTwo.append("SELECT t.trainerNumber"
-					+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c, umidmuzrapov.Schedule s"
-					+ " WHERE t.trainerNumber=c.trainerNumber AND s.courseName = c.coureName AND s.startDate = c.startDate"
-					+ " AND NOT (?busy)");
+			queryTwo.append("SELECT DISTINCT t.trainerNumber"
+					+ " FROM Trainer t"
+					+ " JOIN Course c ON t.trainerNumber = c.trainerNumber"
+					+ " LEFT JOIN Schedule s ON c.className = s.className AND c.startDate = s.startDate"
+					+ " WHERE s.className IS NULL OR NOT (?busy)");
 			StringBuilder busy = new StringBuilder();
 			
 			for (List<Integer> schedule: schedules) {
 				String busySchedule = "OR (s.day = day? AND s.hour = hour? AND s.minute = minute?) ";
-				busySchedule.replace("day?", String.valueOf(schedule.get(0)));
-				busySchedule.replace("hour?", String.valueOf(schedule.get(1)));
-				busySchedule.replace("minute?", String.valueOf(schedule.get(2)));
+				busySchedule = busySchedule.replace("day?", String.valueOf(schedule.get(0)));
+				busySchedule = busySchedule.replace("hour?", String.valueOf(schedule.get(1)));
+				busySchedule = busySchedule.replace("minute?", String.valueOf(schedule.get(2)));
 				busy.append(busySchedule);
 			}
 			
 			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
+			System.out.println(finalQuery);
 			ResultSet availableTrainer = statement.executeQuery(finalQuery);
 			
 			if (availableTrainer.next()) {
