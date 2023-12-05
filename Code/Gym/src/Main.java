@@ -115,11 +115,8 @@ public class Main {
     System.out.print("Enter member's phone number: ");
     String phone = scanner.nextLine();
 
-    System.out.print("Enter member's level ID: ");
-    int levelID = scanner.nextInt();
-
     // Call DBClient method to add member
-    client.addMember(firstName, lastName, phone, levelID);
+    client.addMember(firstName, lastName, phone);
     // List course packages and allow member to select
     // Method needs to be implemented here
     //client.listAndSelectCoursePackage();
