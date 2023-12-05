@@ -129,8 +129,8 @@ public class Main {
     System.out.println("Deleting a member.");
     System.out.print("Enter member's number: ");
     int memberNumber = scanner.nextInt();
-    String result = client.deleteMember(memberNumber);
-    System.out.println(result);
+    client.deleteMember(memberNumber);
+    System.out.println("Member " + memberNumber + " deleted!");
   }
 
   private static void handleQueries(Scanner scanner, DBClient client) {
@@ -189,18 +189,16 @@ public class Main {
     String courseName = scanner.nextLine();
     System.out.print("Enter maximum number of course participants: ");
     int maxParticipants = scanner.nextInt();
-
+    scanner.nextLine();
+    
     System.out.print("Enter current number of course participants: ");
     int curParticipants = scanner.nextInt();
-
-    System.out.print("Enter course start date: ");
+    
+    System.out.print("Enter course start date (yyyy-mm-dd): ");
     Date startDate = Date.valueOf(scanner.nextLine());
-
-    System.out.print("Enter course end date: ");
+    System.out.print("Enter course end date (yyyy-mm-dd): ");
     Date endDate = Date.valueOf(scanner.nextLine());
-
-    System.out.print("Enter trainer number: ");
-    int trainerNumber = scanner.nextInt();
+    List<List> schedules = getSchedule();
 
     // Call DBClient method to add the course
     client.addCourse(
@@ -209,7 +207,7 @@ public class Main {
       curParticipants,
       startDate,
       endDate,
-      trainerNumber
+      schedules
     );
   }
 
@@ -290,4 +288,74 @@ public class Main {
 
     client.deleteCoursePackage(packageName);
   }
+  
+  private static List<List<Integer>> getSchedule()
+  {
+	  System.out.println("Enter the schedule for course or done:");
+	  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
+	  Scanner keyboard=  new Scanner(System.in);
+	  String line = keyboard.nextLine();
+	  
+	  while (!line.trim().equalsIgnoreCase("done")) {
+		  // formatted line
+		  List<Integer> schedule = parseSchedule(line);
+		  if (schedule == null) {
+			  System.out.println("The wrong format.");
+		  } else {
+			  System.outprintln("Schedule is noted.");
+			  System.out.println("Enter the schedule for course or done:");
+			  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
+			  String line = keyboard.nextLine();
+		  }
+	  }
+  }
+  
+  private static List<Integer> parseSchedule(String line)
+  {
+	  List<Integer> schedule = new ArrayList<Integer>();
+	  String[] words = line.split(",");
+      Map<String, Integer> dayOfWeekMap = new HashMap<>();
+      
+      // Adding entries to the map
+      dayOfWeekMap.put("Monday", 1);
+      dayOfWeekMap.put("Tuesday", 2);
+      dayOfWeekMap.put("Wednesday", 3);
+      dayOfWeekMap.put("Thursday", 4);
+      dayOfWeekMap.put("Friday", 5);
+      dayOfWeekMap.put("Saturday", 6);
+      dayOfWeekMap.put("Sunday", 7);
+      
+      if (words.length !=4) {
+    	  return null;
+      }
+      
+      if (!dayOfWeekMap.containsKey(words)) {
+    	  return null;
+      }
+	  
+      for (int i =1; i<4; i++) {
+    	  int numericVal = isNumeric(words[i]);
+    	  
+    	  if (numericValue>=0) {
+    		  schedule.add(numericVal);
+    	  } else {
+    		  return null;
+    	  }
+      }
+      
+      return schedule;
+	  
+  }
+  
+  
+  private static Integer isNumeric(String numberString) {
+		try {
+			int Integer.parseInt(numberString);
+		}
+		catch(NumberFormatException ex) {
+			int -1;
+		}
+	}
 }
+
+

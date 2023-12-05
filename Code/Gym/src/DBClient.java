@@ -109,18 +109,8 @@ public class DBClient {
 	 * @param memberNumber
 	 * @return
 	 */
-	public String deleteMember(int memberNumber) {
+	public boolean deleteMember(int memberNumber) {
 		try {
-			// Check if the member exists
-	        String existQuery = "select count(*) as count from umidmuzrapov.member where memberNumber = ?;";
-	        PreparedStatement existStmt = dbconn.prepareStatement(existQuery);
-	        existStmt.setInt(1, memberNumber);
-	        ResultSet existResult = existStmt.executeQuery();
-	        existResult.next();
-	        if (existResult.getInt("count") == 0) {
-	            return "member does not exist"; // Member not found
-	        }
-	        
 			dbconn.setAutoCommit(false); // Start transaction
 
 			// Check for unreturned equipment
@@ -162,7 +152,7 @@ public class DBClient {
 				}
 
 				dbconn.rollback(); // Rollback transaction
-				return "Cannot delete member due to unpaid balance.";
+				return false; // Prevent deletion due to unpaid balances
 			}
 
 			// Check if the member is actively participating in any courses
@@ -203,20 +193,15 @@ public class DBClient {
 			// Execute the SQL statement to delete the member
 			int rowsAffected = preparedStatement.executeUpdate();
 
-			 dbconn.commit(); // Commit transaction if all operations are successful
-		        // Check if the member was successfully deleted
-		        if (rowsAffected > 0) {
-		            return "Member deleted successfully";
-		        }
-		    } catch (SQLException e) {
-		        e.printStackTrace();
-		        try {
-		            dbconn.rollback();
-		        } catch (SQLException ex) {
-		            ex.printStackTrace();
-		        }
-		    }
-		    return "Member deletion failed";
+			dbconn.commit(); // Commit transaction if all operations are successful
+			// Check if the member was successfully deleted
+			if (rowsAffected > 0) {
+				return true; // Member deleted successfully
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false; // Member deletion failed
 	}
 
 	/**
@@ -294,10 +279,15 @@ public class DBClient {
 	 * @return
 	 */
 	public boolean addCourse(String className, int maxParticipant, int currentParticipant, Date startDate, Date endDate,
-			int trainerNumber) {
+			List<List<Integer>> schedules) {
 		try {
 			dbconn.setAutoCommit(false);
-
+			int trainerNumber = getTrainerNumber(schedules);
+			if (trainerNumber<0) {
+				System.out.println("No instructor is available for the schedule.");
+				return false;
+			}
+			
 			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
 			PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
 
@@ -327,6 +317,49 @@ public class DBClient {
 			}
 		}
 	}
+	
+	private int getTrainerNumber(List<List<Integer>> schedules)
+	{
+		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)"
+				+ " MINUS"
+				+ " (SELECT t.trainerNumber"
+				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course"
+				+ " WHERE t.trainerNumber = c.trainerNumber)";
+		Statement statement = dbconn.createStatement();
+		ResultSet result = statement.executeQuery(queryOne);
+		
+		if (result.hasNext()) {
+			return result.getInt("trainerNumber");
+		}
+		else {
+			StringBuilder queryTwo = new StringBuilder();
+			queryTwo.append("SELECT t.trainerNumber"
+					+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c, umidmuzrapov.Schedule s"
+					+ " WHERE t.trainerNumber=c.trainerNumber AND s.courseName = c.coureName AND s.startDate = c.startDate"
+					+ " AND NOT (?busy)");
+			StringBuilder busy = new StringBuilder();
+			
+			for (List<Integer> schedule: schedules) {
+				String busySchedule = "OR (s.day = day? AND s.hour = hour? AND s.minute = minute?) ";
+				busySchedule.replace("day?", String.valueOf(schedule.get(0)));
+				busySchedule.replace("hour?", String.valueOf(schedule.get(1)));
+				busySchedule.replace("minute?", String.valueOf(schedule.get(2)));
+				busy.append(busySchedule);
+			}
+			
+			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
+			ResultSet availableTrainer = statement.executeQuery(finalQuery);
+			
+			if (availableTrainer.hasNext()) {
+				return availableTrainer.getInt("trainerNumber");
+			} else {
+				return -1;
+			}
+		}
+		
+	}
+		
+		
 
 	public boolean deleteCourse(String className, Date startDate) {
 		try {
@@ -678,5 +711,10 @@ public class DBClient {
 		default:
 			return "None";
 		}
+	}
+	
+	public int chooseTrainer()
+	{
+		
 	}
 }
