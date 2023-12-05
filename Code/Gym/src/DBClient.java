@@ -102,7 +102,7 @@ public class DBClient {
 			dbconn.commit(); // Commit transaction if all operations are successful
 			// Check if the member was successfully added
 			if (rowsAffected > 0) {
-				return "Member added successfully";
+				return "Member added successfully | Member number: " + nextMemberNumber;
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
