@@ -66,7 +66,7 @@ public class DBClient {
 	 * @param levelId
 	 * @return
 	 */
-	public boolean addMember(String firstName, String lastName, String phoneNumber, int levelId) {
+	public boolean addMember(String firstName, String lastName, String phoneNumber) {
 		try {
 			dbconn.setAutoCommit(false); // Start transaction
 
@@ -80,14 +80,13 @@ public class DBClient {
 			}
 
 			// Create a SQL statement to insert a new member into the database
-			String insertQuery = "insert into umidmuzrapov.member (memberNumber, fname, lname, phoneNumber, levelId) values (?, ?, ?, ?, ?)";
+			String insertQuery = "insert into umidmuzrapov.member (memberNumber, fname, lname, phoneNumber, levelId) values (?, ?, ?, ?, 0)";
 
 			PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
 			preparedStatement.setInt(1, nextMemberNumber);
 			preparedStatement.setString(2, firstName);
 			preparedStatement.setString(3, lastName);
 			preparedStatement.setString(4, phoneNumber);
-			preparedStatement.setInt(5, levelId);
 
 			// Execute the SQL statement to add the member
 			int rowsAffected = preparedStatement.executeUpdate();
