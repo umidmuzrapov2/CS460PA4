@@ -123,88 +123,97 @@ public class DBClient {
 	 * @return
 	 */
 	public String deleteMember(int memberNumber) {
-	    try {
-	        dbconn.setAutoCommit(false); // Start transaction
+		try {
+			dbconn.setAutoCommit(false); // Start transaction
 
-	        // Check for unreturned equipment
-	        if (hasUnreturnedEquipment(memberNumber)) {
-	            // Retrieve unreturned equipment items
-	            String unreturnedQuery = "select itemNumber, quantity from umidmuzrapov.equipmentloan where memberItem = " + memberNumber + " and returnedDate is NULL";
-	            Statement unreturnedStmt = dbconn.createStatement();
-	            ResultSet unreturnedItems = unreturnedStmt.executeQuery(unreturnedQuery);
+			// Check for unreturned equipment
+			if (hasUnreturnedEquipment(memberNumber)) {
+				// Retrieve unreturned equipment items
+				String unreturnedQuery = "select itemNumber, quantity from umidmuzrapov.equipmentloan where memberItem = "
+						+ memberNumber + " and returnedDate is NULL";
+				Statement unreturnedStmt = dbconn.createStatement();
+				ResultSet unreturnedItems = unreturnedStmt.executeQuery(unreturnedQuery);
 
-	            System.out.println("\nThe following loaned equipment will be marked as lost:");
-	            // Process each unreturned item
-	            while (unreturnedItems.next()) {
-	                int itemNumber = unreturnedItems.getInt("itemNumber");
-	                int loanedQuantity = unreturnedItems.getInt("quantity");
-	                System.out.println("Item number: " + itemNumber + " | Quantity: " + loanedQuantity);
+				System.out.println("\nThe following loaned equipment will be marked as lost:");
+				// Process each unreturned item
+				while (unreturnedItems.next()) {
+					int itemNumber = unreturnedItems.getInt("itemNumber");
+					int loanedQuantity = unreturnedItems.getInt("quantity");
+					System.out.println("Item number: " + itemNumber + " | Quantity: " + loanedQuantity);
 
-	                // Update the Equipment table, marking the equipment as lost and adjusting the quantity
-	                String updateEquipQuery = "UPDATE umidmuzrapov.equipment SET quantity = quantity - " + loanedQuantity + " WHERE itemNumber = " + itemNumber;
-	                dbconn.createStatement().executeUpdate(updateEquipQuery);
-	            }
-	        }
+					// Update the Equipment table, marking the equipment as lost and adjusting the
+					// quantity
+					String updateEquipQuery = "UPDATE umidmuzrapov.equipment SET quantity = quantity - "
+							+ loanedQuantity + " WHERE itemNumber = " + itemNumber;
+					dbconn.createStatement().executeUpdate(updateEquipQuery);
+				}
+			}
 
-	        // Check if the member has unpaid balances
-	        if (hasUnpaidBalances(memberNumber)) {
-	            // Retrieve and print unpaid balance information
-	            String balanceQuery = "select transactionNumber, total from umidmuzrapov.transaction where memberNumber = " + memberNumber + " and (type = 'Unpaid' or type is NULL)";
-	            Statement balanceStmt = dbconn.createStatement();
-	            ResultSet balanceResult = balanceStmt.executeQuery(balanceQuery);
+			// Check if the member has unpaid balances
+			if (hasUnpaidBalances(memberNumber)) {
+				// Retrieve and print unpaid balance information
+				String balanceQuery = "select transactionNumber, total from umidmuzrapov.transaction where memberNumber = "
+						+ memberNumber + " and (type = 'Unpaid' or type is NULL)";
+				Statement balanceStmt = dbconn.createStatement();
+				ResultSet balanceResult = balanceStmt.executeQuery(balanceQuery);
 
-	            System.out.println("\nThe member has unpaid charge(s).");
-	            while (balanceResult.next()) {
-	                int transactionNumber = balanceResult.getInt("transactionNumber");
-	                float total = balanceResult.getFloat("total");
-	                System.out.println("Unpaid Balance - Transaction Number: " + transactionNumber + ", Amount: " + total);
-	            }
+				System.out.println("\nThe member has unpaid charge(s).");
+				while (balanceResult.next()) {
+					int transactionNumber = balanceResult.getInt("transactionNumber");
+					float total = balanceResult.getFloat("total");
+					System.out.println(
+							"Unpaid Balance - Transaction Number: " + transactionNumber + ", Amount: " + total);
+				}
 
-	            dbconn.rollback(); // Rollback transaction
-	            return "Cannot delete member due to unpaid charge(s)."; // Prevent deletion due to unpaid balances
-	        }
+				dbconn.rollback(); // Rollback transaction
+				return "Cannot delete member due to unpaid charge(s)."; // Prevent deletion due to unpaid balances
+			}
 
-	        // Check if the member is actively participating in any courses
-	        if (isParticipatingInCourses(memberNumber)) {
-	            // Retrieve courses that the member is enrolled in
-	            String enrolledCoursesQuery = "select courseName, startDate from umidmuzrapov.enrollment where memberNumber = " + memberNumber;
-	            Statement enrolledStmt = dbconn.createStatement();
-	            ResultSet enrolledCourses = enrolledStmt.executeQuery(enrolledCoursesQuery);
+			// Check if the member is actively participating in any courses
+			if (isParticipatingInCourses(memberNumber)) {
+				// Retrieve courses that the member is enrolled in
+				String enrolledCoursesQuery = "select courseName, startDate from umidmuzrapov.enrollment where memberNumber = "
+						+ memberNumber;
+				Statement enrolledStmt = dbconn.createStatement();
+				ResultSet enrolledCourses = enrolledStmt.executeQuery(enrolledCoursesQuery);
 
-	            System.out.println("\nThe member will be dropped from the following course(s):");
-	            while (enrolledCourses.next()) {
-	                String courseName = enrolledCourses.getString("courseName");
-	                String startDate = enrolledCourses.getString("startDate");
-	                System.out.println(courseName);
+				System.out.println("\nThe member will be dropped from the following course(s):");
+				while (enrolledCourses.next()) {
+					String courseName = enrolledCourses.getString("courseName");
+					String startDate = enrolledCourses.getString("startDate");
+					System.out.println(courseName);
 
-	                // Delete the enrollment record
-	                String deleteEnrollmentQuery = "delete from umidmuzrapov.enrollment where memberNumber = " + memberNumber + " and courseName = '" + courseName + "' and startDate = '" + startDate + "'";
-	                dbconn.createStatement().executeUpdate(deleteEnrollmentQuery);
+					// Delete the enrollment record
+					String deleteEnrollmentQuery = "delete from umidmuzrapov.enrollment where memberNumber = "
+							+ memberNumber + " and courseName = '" + courseName + "' and startDate = '" + startDate
+							+ "'";
+					dbconn.createStatement().executeUpdate(deleteEnrollmentQuery);
 
-	                // Update available spots in the course
-	                String updateCourseQuery = "update umidmuzrapov.course set currentParticipant = currentParticipant - 1 where className = '" + courseName + "' and startDate = '" + startDate + "'";
-	                dbconn.createStatement().executeUpdate(updateCourseQuery);
-	            }
-	        }
+					// Update available spots in the course
+					String updateCourseQuery = "update umidmuzrapov.course set currentParticipant = currentParticipant - 1 where className = '"
+							+ courseName + "' and startDate = '" + startDate + "'";
+					dbconn.createStatement().executeUpdate(updateCourseQuery);
+				}
+			}
 
-	        // If all checks pass, delete the member
-	        String deleteQuery = "delete from umidmuzrapov.member where memberNumber = " + memberNumber;
-	        int rowsAffected = dbconn.createStatement().executeUpdate(deleteQuery);
+			// If all checks pass, delete the member
+			String deleteQuery = "delete from umidmuzrapov.member where memberNumber = " + memberNumber;
+			int rowsAffected = dbconn.createStatement().executeUpdate(deleteQuery);
 
-	        dbconn.commit(); // Commit transaction if all operations are successful
-	        // Check if the member was successfully deleted
-	        if (rowsAffected > 0) {
-	            return "Member deleted successfully"; // Member deleted successfully
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        try {
-	            dbconn.rollback();
-	        } catch (SQLException ex) {
-	            ex.printStackTrace();
-	        }
-	    }
-	    return "Member cannot be deleted"; // Member deletion failed
+			dbconn.commit(); // Commit transaction if all operations are successful
+			// Check if the member was successfully deleted
+			if (rowsAffected > 0) {
+				return "Member deleted successfully"; // Member deleted successfully
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+		}
+		return "Member cannot be deleted"; // Member deletion failed
 	}
 
 	/**
@@ -289,6 +298,8 @@ public class DBClient {
 			if (trainerNumber < 0) {
 				System.out.println("No instructor is available for the schedule.");
 				return false;
+			} else {
+				System.out.printf("Trainer with id: %d was chosen for this course.\n", trainerNumber);
 			}
 
 			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
@@ -323,8 +334,11 @@ public class DBClient {
 
 	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException {
 		Statement statement = dbconn.createStatement();
-		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)" + " MINUS" + " (SELECT t.trainerNumber"
-				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course" + " WHERE t.trainerNumber = c.trainerNumber)";
+		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)"
+				+ " MINUS"
+				+ " (SELECT t.trainerNumber"
+				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c"
+				+ " WHERE t.trainerNumber = c.trainerNumber)";
 
 		ResultSet result = statement.executeQuery(queryOne);
 
@@ -332,21 +346,23 @@ public class DBClient {
 			return result.getInt("trainerNumber");
 		} else {
 			StringBuilder queryTwo = new StringBuilder();
-			queryTwo.append("SELECT t.trainerNumber"
-					+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c, umidmuzrapov.Schedule s"
-					+ " WHERE t.trainerNumber=c.trainerNumber AND s.courseName = c.coureName AND s.startDate = c.startDate"
-					+ " AND NOT (?busy)");
+			queryTwo.append("SELECT DISTINCT t.trainerNumber"
+					+ " FROM Trainer t"
+					+ " JOIN Course c ON t.trainerNumber = c.trainerNumber"
+					+ " LEFT JOIN Schedule s ON c.className = s.className AND c.startDate = s.startDate"
+					+ " WHERE s.className IS NULL OR NOT (?busy)");
 			StringBuilder busy = new StringBuilder();
 
 			for (List<Integer> schedule : schedules) {
 				String busySchedule = "OR (s.day = day? AND s.hour = hour? AND s.minute = minute?) ";
-				busySchedule.replace("day?", String.valueOf(schedule.get(0)));
-				busySchedule.replace("hour?", String.valueOf(schedule.get(1)));
-				busySchedule.replace("minute?", String.valueOf(schedule.get(2)));
+				busySchedule = busySchedule.replace("day?", String.valueOf(schedule.get(0)));
+				busySchedule = busySchedule.replace("hour?", String.valueOf(schedule.get(1)));
+				busySchedule = busySchedule.replace("minute?", String.valueOf(schedule.get(2)));
 				busy.append(busySchedule);
 			}
 
 			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
+			System.out.println(finalQuery);
 			ResultSet availableTrainer = statement.executeQuery(finalQuery);
 
 			if (availableTrainer.next()) {
@@ -690,22 +706,22 @@ public class DBClient {
 
 	private String intToDay(int day) {
 		switch (day) {
-		case 1:
-			return "Monday";
-		case 2:
-			return "Tueday";
-		case 3:
-			return "Wednesday";
-		case 4:
-			return "Thursday";
-		case 5:
-			return "Friday";
-		case 6:
-			return "Satruday";
-		case 7:
-			return "Sunday";
-		default:
-			return "None";
+			case 1:
+				return "Monday";
+			case 2:
+				return "Tueday";
+			case 3:
+				return "Wednesday";
+			case 4:
+				return "Thursday";
+			case 5:
+				return "Friday";
+			case 6:
+				return "Satruday";
+			case 7:
+				return "Sunday";
+			default:
+				return "None";
 		}
 	}
 
