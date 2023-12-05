@@ -1,3 +1,5 @@
+import java.sql.Date;
+import java.util.*;
 import java.util.Scanner;
 
 public class Main {
@@ -114,37 +116,21 @@ public class Main {
     String phone = scanner.nextLine();
 
     System.out.print("Enter member's level ID: ");
-    String levelID = scanner.nextLine();
-    // Call DBClient method to add member
-    //client.addMember(firstName, lastName, phoneNumber, levelID);
+    int levelID = scanner.nextInt();
 
+    // Call DBClient method to add member
+    client.addMember(firstName, lastName, phone, levelID);
     // List course packages and allow member to select
-    // client.listAndSelectCoursePackage();
+    // Method needs to be implemented here
+    //client.listAndSelectCoursePackage();
   }
 
   private static void deleteMember(Scanner scanner, DBClient client) {
     System.out.println("Deleting a member.");
     System.out.print("Enter member's number: ");
-    String memberId = scanner.nextLine();
-    // Call DBClient method to check for unreturned equipment
-    //boolean hasUnreturnedEquipment = client.hasUnreturnedEquipment(memberId);
-    //if (hasUnreturnedEquipment) {
-    /* mark equipment as lost and update available quantity */
-    //}
-
-    // Check for unpaid balances
-    //boolean hasUnpaidBalances = client.hasUnpaidBalances(memberId);
-    //if (hasUnpaidBalances) {
-    /* print balances and prevent deletion */
-    //}
-
-    // Check if actively participating in any courses
-    //boolean isParticipatingInCourses = client.isParticipatingInCourses(memberId);
-    //if (isParticipatingInCourses) {
-    /* delete course participation records and update available spots */
-    //}
-    //If all checks pass, proceed with deletion
-    // client.deleteMember(memberId);
+    int memberNumber = scanner.nextInt();
+    client.deleteMember(memberNumber);
+    System.out.println("Member " + memberNumber + " deleted!");
   }
 
   private static void handleQueries(Scanner scanner, DBClient client) {
@@ -201,30 +187,40 @@ public class Main {
     System.out.println("Adding a new course.");
     System.out.print("Enter course name: ");
     String courseName = scanner.nextLine();
-    System.out.print("Enter course description: ");
-    String courseDescription = scanner.nextLine();
-    // Additional course details here, such as duration, instructor, etc.
+    System.out.print("Enter maximum number of course participants: ");
+    int maxParticipants = scanner.nextInt();
+
+    System.out.print("Enter current number of course participants: ");
+    int curParticipants = scanner.nextInt();
+
+    System.out.print("Enter course start date: ");
+    Date startDate = Date.valueOf(scanner.nextLine());
+
+    System.out.print("Enter course end date: ");
+    Date endDate = Date.valueOf(scanner.nextLine());
+
+    System.out.print("Enter trainer number: ");
+    int trainerNumber = scanner.nextInt();
 
     // Call DBClient method to add the course
-    // client.addCourse(courseName, courseDescription, ...);
+    client.addCourse(
+      courseName,
+      maxParticipants,
+      curParticipants,
+      startDate,
+      endDate,
+      trainerNumber
+    );
   }
 
   private static void deleteCourse(Scanner scanner, DBClient client) {
     System.out.println("Deleting a course.");
-    System.out.print("Enter course ID: ");
-    String courseId = scanner.nextLine();
-    // Check if the course is ongoing and has enrolled members
-    // boolean isOngoing = client.checkIfCourseIsOngoing(courseId);
-    // if (isOngoing) {
-    //     List<Member> enrolledMembers = client.getEnrolledMembers(courseId);
-    //     for (Member member : enrolledMembers) {
-    //         System.out.println("Member Name: " + member.getName() + ", Phone: " + member.getPhone());
-    //     }
-    //     // Additional logic to handle notifying members
-    // }
+    System.out.print("Enter course name: ");
+    String courseName = scanner.nextLine();
+    System.out.print("Enter course start date: ");
+    Date startDate = Date.valueOf(scanner.nextLine());
 
-    // Proceed with course deletion
-    // client.deleteCourse(courseId);
+    client.deleteCourse(courseName, startDate);
   }
 
   private static void handleCoursePackageOperations(
@@ -257,8 +253,13 @@ public class Main {
 
   private static void addCoursePackage(Scanner scanner, DBClient client) {
     System.out.println("Adding a new course package.");
+    System.out.print("Enter the name of the course package to add: ");
+    String packageName = scanner.nextLine();
+    List<String[]> selectedCourses = new ArrayList<>();
+
+    client.addCoursePackage(packageName, selectedCourses);
     // Additional logic to input course package details
-    // e.g., name, description, list of courses
+    // Method to be implemented here to list course packages
 
     // Call DBClient method to add the course package
     // client.addCoursePackage(packageDetails);
@@ -267,29 +268,26 @@ public class Main {
   private static void updateCoursePackage(Scanner scanner, DBClient client) {
     System.out.println("Updating a course package.");
     // First, list all available course packages to select from
+    // Will be implemented
     // client.listCoursePackages();
 
-    System.out.print("Enter the ID of the course package to update: ");
-    String packageId = scanner.nextLine();
-    // Additional logic to update course package details
-    // e.g., add/remove courses from the package, update pricing
+    System.out.print("Enter the name of the course package to update: ");
+    String packageName = scanner.nextLine();
+    List<String[]> selectedCourses = new ArrayList<>();
 
-    // Call DBClient method to update the course package
-    // client.updateCoursePackage(packageId, updatedDetails);
+    client.updateCoursePackage(packageName, selectedCourses);
   }
 
   private static void deleteCoursePackage(Scanner scanner, DBClient client) {
     System.out.println("Deleting a course package.");
     // First, list all available course packages to select from
+    // Will be implemented
     // client.listCoursePackages();
 
-    System.out.print("Enter the ID of the course package to delete: ");
-    String packageId = scanner.nextLine();
-    // Additional checks to ensure deletion does not impact enrolled members
-    // e.g., check if any members are currently enrolled in this package
-    // client.checkEnrollmentsBeforePackageDeletion(packageId);
+    System.out.print("Enter the name of the course package to delete: ");
+    String packageName = scanner.nextLine();
+    List<String[]> selectedCourses;
 
-    // Call DBClient method to delete the course package
-    // client.deleteCoursePackage(packageId);
+    client.deleteCoursePackage(packageName);
   }
 }
