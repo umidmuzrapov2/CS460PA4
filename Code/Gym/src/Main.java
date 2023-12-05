@@ -129,8 +129,8 @@ public class Main {
     System.out.println("Deleting a member.");
     System.out.print("Enter member's number: ");
     int memberNumber = scanner.nextInt();
-    client.deleteMember(memberNumber);
-    System.out.println("Member " + memberNumber + " deleted!");
+    String result = client.deleteMember(memberNumber);
+    System.out.println(result);
   }
 
   private static void handleQueries(Scanner scanner, DBClient client) {

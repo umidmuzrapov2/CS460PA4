@@ -109,8 +109,18 @@ public class DBClient {
 	 * @param memberNumber
 	 * @return
 	 */
-	public boolean deleteMember(int memberNumber) {
+	public String deleteMember(int memberNumber) {
 		try {
+			// Check if the member exists
+	        String existQuery = "select count(*) as count from umidmuzrapov.member where memberNumber = ?;";
+	        PreparedStatement existStmt = dbconn.prepareStatement(existQuery);
+	        existStmt.setInt(1, memberNumber);
+	        ResultSet existResult = existStmt.executeQuery();
+	        existResult.next();
+	        if (existResult.getInt("count") == 0) {
+	            return "member does not exist"; // Member not found
+	        }
+	        
 			dbconn.setAutoCommit(false); // Start transaction
 
 			// Check for unreturned equipment
@@ -152,7 +162,7 @@ public class DBClient {
 				}
 
 				dbconn.rollback(); // Rollback transaction
-				return false; // Prevent deletion due to unpaid balances
+				return "Cannot delete member due to unpaid balance.";
 			}
 
 			// Check if the member is actively participating in any courses
@@ -193,15 +203,20 @@ public class DBClient {
 			// Execute the SQL statement to delete the member
 			int rowsAffected = preparedStatement.executeUpdate();
 
-			dbconn.commit(); // Commit transaction if all operations are successful
-			// Check if the member was successfully deleted
-			if (rowsAffected > 0) {
-				return true; // Member deleted successfully
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return false; // Member deletion failed
+			 dbconn.commit(); // Commit transaction if all operations are successful
+		        // Check if the member was successfully deleted
+		        if (rowsAffected > 0) {
+		            return "Member deleted successfully";
+		        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		        try {
+		            dbconn.rollback();
+		        } catch (SQLException ex) {
+		            ex.printStackTrace();
+		        }
+		    }
+		    return "Member deletion failed";
 	}
 
 	/**
