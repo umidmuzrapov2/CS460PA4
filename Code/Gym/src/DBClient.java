@@ -322,17 +322,18 @@ public class DBClient {
 		}
 	}
 	
-	private int getTrainerNumber(List<List<Integer>> schedules)
+	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException
 	{
+		Statement statement = dbconn.createStatement();
 		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)"
 				+ " MINUS"
 				+ " (SELECT t.trainerNumber"
 				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course"
 				+ " WHERE t.trainerNumber = c.trainerNumber)";
-		Statement statement = dbconn.createStatement();
+
 		ResultSet result = statement.executeQuery(queryOne);
 		
-		if (result.hasNext()) {
+		if (result.next()) {
 			return result.getInt("trainerNumber");
 		}
 		else {
@@ -354,13 +355,12 @@ public class DBClient {
 			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
 			ResultSet availableTrainer = statement.executeQuery(finalQuery);
 			
-			if (availableTrainer.hasNext()) {
+			if (availableTrainer.next()) {
 				return availableTrainer.getInt("trainerNumber");
 			} else {
 				return -1;
 			}
 		}
-		
 	}
 		
 		
@@ -717,8 +717,4 @@ public class DBClient {
 		}
 	}
 	
-	public int chooseTrainer()
-	{
-		
-	}
 }

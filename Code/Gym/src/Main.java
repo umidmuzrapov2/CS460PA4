@@ -198,7 +198,7 @@ public class Main {
     Date startDate = Date.valueOf(scanner.nextLine());
     System.out.print("Enter course end date (yyyy-mm-dd): ");
     Date endDate = Date.valueOf(scanner.nextLine());
-    List<List> schedules = getSchedule();
+    List<List<Integer>> schedules = getSchedule();
 
     // Call DBClient method to add the course
     client.addCourse(
@@ -293,6 +293,7 @@ public class Main {
   {
 	  System.out.println("Enter the schedule for course or done:");
 	  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
+	  List<List<Integer>> schedules = new ArrayList<List<Integer>>();
 	  Scanner keyboard=  new Scanner(System.in);
 	  String line = keyboard.nextLine();
 	  
@@ -302,12 +303,15 @@ public class Main {
 		  if (schedule == null) {
 			  System.out.println("The wrong format.");
 		  } else {
-			  System.outprintln("Schedule is noted.");
+			  System.out.println("Schedule is noted.");
+			  schedules.add(schedule);
 			  System.out.println("Enter the schedule for course or done:");
 			  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
-			  String line = keyboard.nextLine();
+			  line = keyboard.nextLine();
 		  }
 	  }
+	  
+	  return schedules;
   }
   
   private static List<Integer> parseSchedule(String line)
@@ -336,7 +340,7 @@ public class Main {
       for (int i =1; i<4; i++) {
     	  int numericVal = isNumeric(words[i]);
     	  
-    	  if (numericValue>=0) {
+    	  if (numericVal>=0) {
     		  schedule.add(numericVal);
     	  } else {
     		  return null;
@@ -348,12 +352,12 @@ public class Main {
   }
   
   
-  private static Integer isNumeric(String numberString) {
+  private static int isNumeric(String numberString) {
 		try {
-			int Integer.parseInt(numberString);
+			return Integer.parseInt(numberString);
 		}
 		catch(NumberFormatException ex) {
-			int -1;
+			return -1;
 		}
 	}
 }
