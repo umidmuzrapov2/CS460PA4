@@ -2,13 +2,13 @@ Package (packageName, cost)
 Primary Key packageName
 
 Tainer (trainerNumber, fname, lname, phoneNumber)
-Primary Key trainerNumber
+Primary Key trainerNumber 
 
-Course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber)
-Primary Key: className, startDate
+Course (className, startDate, maxParticipant, currentParticipant, endDate, trainerNumber)
+Primary Key: className, startDate; Foreign Key: trainerNumber
 
 Schedule (className, startDate day, hour, minute, duration)
-Primary Key: className, startDate, day
+Primary Key: className, startDate, day; Foreign Key: className, startDate
 
 Member (memberNumber, fname, lname, phoneNumber, levelId)
 Primary Key memberNumber; Foreign Key: levelId
@@ -19,15 +19,18 @@ Primary Key transactionNumber; Foreign Key: memberNumber
 Equipment (itemNumber, description, quantity)
 Primary Key itemNumber
 
-Level (levelId, minSpending, discount)
+MembershipLevel (levelId, minSpending, discount)
 Primary Key levelId
 
 CoursePackage (packageName, className, startDate)
-Primary Key: packageName className; Foreign Key: packageName, className, startDate
+Primary Key: packageName, className, startDate; Foreign Key: packageName, className, startDate
 
-Purchase (memberNumber, courseName, transactionNumber)
+Purchase (memberNumber, packageName, transactionNumber)
 Primary Key: memberNumber, courseName, transactionNumber;
 Foreign Key: memberNumber, courseName, transactionNumber;
 
 EquipmentLoan (loanNumber, itemNumber, memberItem, quantity, borrowedDate, returnedDate)
-Primary key: loanNumber; Foreign Key: itemNumber, memberItem
+Primary key: loanNumber; Foreign Key: itemNumber, memberNumber
+
+Enrollment (memberNumber, courseName, startDate)
+Primary Key: memberNumber, courseName, startDate
