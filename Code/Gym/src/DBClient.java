@@ -577,4 +577,91 @@ public class DBClient {
 		return membersWithNegativeBalance;
 	}
 
+	public void printCourseSchedule(String firstname, String lastname) throws SQLException {
+
+		int memberNumber = memberExists(firstname, lastname);
+		if (memberNumber < 0) {
+			return;
+		}
+
+		String query = String.format("SELECT c.courseName, c.startDate, s.day, s.hour, s.minute, s.duration"
+				+ "FROM umidmuzrapov.Member m, umidmuzrapov.Course c, umidmuzrapov.Enrollment e, umidmuzrapov.Schedule s"
+				+ "WHERE m.memberNumber=e.memberNumber AND m.memberNumber=%d"
+				+ " AND c.courseName=e.courseName AND c.startDate=e.startDate AND s.courseName=c.courseName AND s.startDate=c.startDate",
+				memberNumber);
+
+		Statement statement = dbconn.createStatement();
+		ResultSet result = statement.executeQuery(query);
+
+		System.out.printf("Schedule for %s %s\n", firstname, lastname);
+		while (result.next()) {
+			System.out.printf("Course %s. %s, %d:%d. Duration: %d.\n", result.getString("courseName"),
+					intToDay(result.getInt("day")), result.getInt("hour"), result.getInt("minute"),
+					result.getInt("duration"));
+		}
+
+	}
+
+	public int memberExists(String firstname, String lastname) throws SQLException {
+		Statement statement = dbconn.createStatement();
+		String query = "SELECT * FROM umidmuzrapov.Member" + " WHERE fname=1? and lname=2?";
+		query.replace("1?", firstname).replace("?2", lastname);
+		ResultSet result = statement.executeQuery(query);
+		ArrayList<Integer> memberNumbers = new ArrayList<Integer>();
+
+		while (result.next()) {
+			int memberNumber = result.getInt("memberNumber");
+			memberNumbers.add(memberNumber);
+		}
+
+		if (memberNumbers.size() == 0) {
+			return 0;
+		} else if (memberNumbers.size() == 1) {
+			return memberNumbers.remove(0);
+		} else {
+			System.out.println("There are several numbers with this name. Ask the member for id and check."
+					+ "\nEnter one of the options:");
+			int count = 0;
+			for (int elem : memberNumbers) {
+				System.out.printf("%d) %d", count, elem);
+			}
+
+			Scanner keyboard = new Scanner(System.in);
+			try {
+				int userChoice = keyboard.nextInt();
+				if (userChoice < memberNumbers.size()) {
+					return memberNumbers.get(userChoice);
+				} else {
+					System.out.println("You entered the wrong format.");
+					return -1;
+				}
+			}
+
+			catch (InputMismatchException ex) {
+				System.out.println("You entered the wrong format.");
+				return -1;
+			}
+		}
+	}
+
+	private String intToDay(int day) {
+		switch (day) {
+		case 1:
+			return "Monday";
+		case 2:
+			return "Tueday";
+		case 3:
+			return "Wednesday";
+		case 4:
+			return "Thursday";
+		case 5:
+			return "Friday";
+		case 6:
+			return "Satruday";
+		case 7:
+			return "Sunday";
+		default:
+			return "None";
+		}
+	}
 }
