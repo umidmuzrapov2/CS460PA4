@@ -288,6 +288,8 @@ public class DBClient {
 	public boolean addCourse(String className, int maxParticipant, int currentParticipant, Date startDate, Date endDate,
 			int trainerNumber) {
 		try {
+			dbconn.setAutoCommit(false);
+
 			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
 			PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
 
@@ -300,9 +302,21 @@ public class DBClient {
 
 			int rowsAffected = preparedStatement.executeUpdate();
 			return rowsAffected > 0;
+
 		} catch (SQLException e) {
 			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
 			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -364,6 +378,26 @@ public class DBClient {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public List<String[]> listOngoingCourses() {
+		List<String[]> ongoingCourses = new ArrayList<>();
+		try {
+			String query = "select className, startDate, endDate from umidmuzrapov.course where endDate > CURRENT_DATE";
+			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			while (resultSet.next()) {
+				String className = resultSet.getString("className");
+				Date startDate = resultSet.getDate("startDate");
+				Date endDate = resultSet.getDate("endDate");
+
+				ongoingCourses.add(new String[] { className, startDate.toString(), endDate.toString() });
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return ongoingCourses;
 	}
 
 	public boolean addCoursePackage(String packageName, List<String[]> selectedCourses) {
@@ -525,5 +559,33 @@ public class DBClient {
 			return false;
 		}
 	}
+	
+	public List<String[]> queryOne() {
+	    List<String[]> membersWithNegativeBalance = new ArrayList<>();
+	    try {
+	        // SQL query to find members with negative balance
+	        String query = "select m.fname, m.lname, m.phoneNumber, SUM(t.total) as balance " +
+	                       "from umidmuzrapov.member m " +
+	                       "join umidmuzrapov.transaction t on m.memberNumber = t.memberNumber " +
+	                       "group by m.fname, m.lname, m.phoneNumber " +
+	                       "having SUM(t.total) < 0";
+
+	        PreparedStatement preparedStatement = dbconn.prepareStatement(query);
+	        ResultSet resultSet = preparedStatement.executeQuery();
+
+	        while (resultSet.next()) {
+	            String firstName = resultSet.getString("fname");
+	            String lastName = resultSet.getString("lname");
+	            String phoneNumber = resultSet.getString("phoneNumber");
+	            String balance = resultSet.getString("balance");
+
+	            membersWithNegativeBalance.add(new String[]{firstName + " " + lastName, phoneNumber, balance});
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return membersWithNegativeBalance;
+	}
+
 
 }
