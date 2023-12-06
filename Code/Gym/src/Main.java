@@ -35,12 +35,8 @@ import java.util.*;
 import java.util.Scanner;
 
 /**
- * Class name: Main
- * Name: Umidjon Muzrapov, Hamad Marhoon, Abdullah Alkhamis, Yahya Al Malallah
- * Dependencies: 
- * 	java.sql.*
- * 	java.util.*
- * 	DBClient.java
+ * Class name: Main Name: Umidjon Muzrapov, Hamad Marhoon, Abdullah Alkhamis,
+ * Yahya Al Malallah Dependencies: java.sql.* java.util.* DBClient.java
  * 
  * Inherits from: None Interfaces: None ----------------------------------------
  * 
@@ -537,7 +533,6 @@ public class Main {
 		}
 	}
 
-
 	/**
 	 * Method updateCoursePackage
 	 * 
@@ -570,27 +565,26 @@ public class Main {
 	}
 
 	/**
-	* Method editSelectedPackage
-	* 
-	* Purpose:
-	* 	This method provides options to edit a selected course package. It allows
-	*  the admin to add or remove courses from the specified package, thereby
-	*  updating its composition. The method presents a menu for these operations
-	*  and delegates the task to the respective methods based on the admin's choice.
-	*
-	* Pre-condition:
-	* 	Connection to the DBMS has been successfully established. The specified
-	*  package name must correspond to an existing course package.
-	*
-	* Post-condition:
-	* 	The selected course package is modified based on the admin's choices.
-	*  This could involve adding new courses to the package or removing existing
-	*  ones. The state of the package in the database is updated accordingly.
-	*
-	* @param scanner An instance of Scanner for capturing user input.
-	* @param client  An instance of DBClient, representing a client connected to the DBMS.
-	* @param packageName The name of the course package to be edited.
-	*/
+	 * Method editSelectedPackage
+	 * 
+	 * Purpose: This method provides options to edit a selected course package. It
+	 * allows the admin to add or remove courses from the specified package, thereby
+	 * updating its composition. The method presents a menu for these operations and
+	 * delegates the task to the respective methods based on the admin's choice.
+	 *
+	 * Pre-condition: Connection to the DBMS has been successfully established. The
+	 * specified package name must correspond to an existing course package.
+	 *
+	 * Post-condition: The selected course package is modified based on the admin's
+	 * choices. This could involve adding new courses to the package or removing
+	 * existing ones. The state of the package in the database is updated
+	 * accordingly.
+	 *
+	 * @param scanner     An instance of Scanner for capturing user input.
+	 * @param client      An instance of DBClient, representing a client connected
+	 *                    to the DBMS.
+	 * @param packageName The name of the course package to be edited.
+	 */
 	private static void editSelectedPackage(Scanner scanner, DBClient client, String packageName) {
 		System.out.println("Editing package: " + packageName);
 		System.out.println("1. Add a course");
@@ -615,28 +609,29 @@ public class Main {
 	}
 
 	/**
-	* Method addCourseToPackage
-	* 
-	* Purpose:
-	* 	This method allows the admin to add a new course to an existing course package.
-	* 	It presents a list of all ongoing courses and prompts the admin to select one
-	* 	to add to the specified package. The method includes a check to prevent
-	* 	duplication by verifying if the selected course is already part of the package.
-	* 
-	* Pre-condition:
-	* 	Connection to the DBMS must be successfully established. The method assumes
-	* 	that the package name provided corresponds to an existing course package.
-	* 	Also, there should be ongoing courses available for selection.
-	* 
-	* Post-condition:
-	* 	If the selected course is not already in the package, it is added, and its
-	* 	details are updated in the database. If the course is already in the package,
-	* 	the method informs the user and no addition is made.
-	* 
-	* @param scanner An instance of Scanner to capture user input.
-	* @param client  An instance of DBClient, representing a client connected to the DBMS.
-	* @param packageName The name of the course package to which the course is being added.
-	*/
+	 * Method addCourseToPackage
+	 * 
+	 * Purpose: This method allows the admin to add a new course to an existing
+	 * course package. It presents a list of all ongoing courses and prompts the
+	 * admin to select one to add to the specified package. The method includes a
+	 * check to prevent duplication by verifying if the selected course is already
+	 * part of the package.
+	 * 
+	 * Pre-condition: Connection to the DBMS must be successfully established. The
+	 * method assumes that the package name provided corresponds to an existing
+	 * course package. Also, there should be ongoing courses available for
+	 * selection.
+	 * 
+	 * Post-condition: If the selected course is not already in the package, it is
+	 * added, and its details are updated in the database. If the course is already
+	 * in the package, the method informs the user and no addition is made.
+	 * 
+	 * @param scanner     An instance of Scanner to capture user input.
+	 * @param client      An instance of DBClient, representing a client connected
+	 *                    to the DBMS.
+	 * @param packageName The name of the course package to which the course is
+	 *                    being added.
+	 */
 	private static void addCourseToPackage(Scanner scanner, DBClient client, String packageName) {
 		System.out.println("Select a course to add to the package '" + packageName + "':");
 		List<String[]> allCourses = client.listOngoingCourses();
@@ -651,7 +646,7 @@ public class Main {
 
 		if (courseIndex >= 0 && courseIndex < allCourses.size()) {
 			String[] selectedCourse = allCourses.get(courseIndex);
-			
+
 			// Check if the course is already in the package
 			if (client.isCourseInPackage(packageName, selectedCourse[0], selectedCourse[1])) {
 				System.out.println("This course is already in the package.");
@@ -670,28 +665,30 @@ public class Main {
 	}
 
 	/**
-	* Method removeCourseFromPackage
-	* 
-	* Purpose:
-	* 	This method facilitates the removal of a specific course from an existing course package.
-	* 	The admin is presented with a list of all courses currently in the selected package and
-	* 	can choose one to be removed. This method is responsible for handling the user's
-	* 	selection and initiating the removal process of the selected course from the package.
-	* 
-	* Pre-condition:
-	* 	Connection to the DBMS must be active and stable. The packageName provided should
-	* 	correspond to an existing course package in the database. The method assumes that
-	* 	the package contains at least one course that can be removed.
-	* 
-	* Post-condition:
-	* 	If the user's selection is valid, the specified course is removed from the course package.
-	* 	The database is updated to reflect this change. If the course selection is invalid or
-	* 	the removal process encounters an issue, an appropriate message is displayed.
-	* 
-	* @param scanner An instance of Scanner to capture user input.
-	* @param client  An instance of DBClient, representing a client connected to the DBMS.
-	* @param packageName The name of the course package from which a course is being removed.
-	*/
+	 * Method removeCourseFromPackage
+	 * 
+	 * Purpose: This method facilitates the removal of a specific course from an
+	 * existing course package. The admin is presented with a list of all courses
+	 * currently in the selected package and can choose one to be removed. This
+	 * method is responsible for handling the user's selection and initiating the
+	 * removal process of the selected course from the package.
+	 * 
+	 * Pre-condition: Connection to the DBMS must be active and stable. The
+	 * packageName provided should correspond to an existing course package in the
+	 * database. The method assumes that the package contains at least one course
+	 * that can be removed.
+	 * 
+	 * Post-condition: If the user's selection is valid, the specified course is
+	 * removed from the course package. The database is updated to reflect this
+	 * change. If the course selection is invalid or the removal process encounters
+	 * an issue, an appropriate message is displayed.
+	 * 
+	 * @param scanner     An instance of Scanner to capture user input.
+	 * @param client      An instance of DBClient, representing a client connected
+	 *                    to the DBMS.
+	 * @param packageName The name of the course package from which a course is
+	 *                    being removed.
+	 */
 	private static void removeCourseFromPackage(Scanner scanner, DBClient client, String packageName) {
 		System.out.println("Select a course to remove from the package '" + packageName + "':");
 		List<String[]> packageCourses = client.listCoursesInPackage(packageName);
@@ -717,28 +714,27 @@ public class Main {
 	}
 
 	/**
-	* Method deleteCoursePackage
-	* 
-	* Purpose:
-	* 	This method allows an admin to delete an entire course package from the system. 
-	* 	It first displays a list of all existing course packages and then prompts the admin 
-	* 	to select one for deletion. Upon selection, the method proceeds to delete the chosen 
-	* 	package along with any associated course entries in the package from the database.
-	* 
-	* Pre-condition:
-	* 	Connection to the DBMS must be established and functional. The list of packages
-	* 	presented to the admin is assumed to be current and accurate. The admin is expected
-	* 	to make a valid selection from the list.
-	* 
-	* Post-condition:
-	* 	If a valid package is selected, it is removed from the database, including all
-	* 	associations with courses. If the selection is invalid or the deletion process
-	* 	encounters an error, an appropriate error message is displayed, and no changes
-	* 	are made to the database.
-	* 
-	* @param scanner An instance of Scanner to capture user input.
-	* @param client  An instance of DBClient, representing a client connected to the DBMS.
-	*/
+	 * Method deleteCoursePackage
+	 * 
+	 * Purpose: This method allows an admin to delete an entire course package from
+	 * the system. It first displays a list of all existing course packages and then
+	 * prompts the admin to select one for deletion. Upon selection, the method
+	 * proceeds to delete the chosen package along with any associated course
+	 * entries in the package from the database.
+	 * 
+	 * Pre-condition: Connection to the DBMS must be established and functional. The
+	 * list of packages presented to the admin is assumed to be current and
+	 * accurate. The admin is expected to make a valid selection from the list.
+	 * 
+	 * Post-condition: If a valid package is selected, it is removed from the
+	 * database, including all associations with courses. If the selection is
+	 * invalid or the deletion process encounters an error, an appropriate error
+	 * message is displayed, and no changes are made to the database.
+	 * 
+	 * @param scanner An instance of Scanner to capture user input.
+	 * @param client  An instance of DBClient, representing a client connected to
+	 *                the DBMS.
+	 */
 	private static void deleteCoursePackage(Scanner scanner, DBClient client) {
 		System.out.println("Select a course package to delete:");
 		List<String> packages = client.listAllPackages();
