@@ -43,7 +43,9 @@ import java.util.*;
  *  queryOne()
  *  queryThree()
  *  queryTwo​(int memberNumber)
+ *  removeCourseFromPackage​(java.lang.String packageName, java.lang.String className, java.lang.String startDate)
  *  	removeCourseFromPackage​(java.lang.String packageName, java.lang.String className, java.lang.String startDate)
+ *  	updateCoursePackage​(java.lang.String packageName, java.util.List<java.lang.String[]> updatedCourses)
  */	
 public class DBClient {
 
@@ -537,6 +539,7 @@ public class DBClient {
 			ResultSet enrolledMembers = enrolledStmt.executeQuery();
 
 			boolean hasEnrolledMembers = false;
+			System.out.println("Notigy these members");
 			while (enrolledMembers.next()) {
 				hasEnrolledMembers = true;
 				String memberName = enrolledMembers.getString("fname") + " " + enrolledMembers.getString("lname");
@@ -544,6 +547,8 @@ public class DBClient {
 				System.out.println("Member: " + memberName + ", Phone: " + phoneNumber);
 			}
 
+			System.out.println("Notification is done.");
+			hasEnrolledMembers = false;
 			if (hasEnrolledMembers) {
 				// Notify the admin/user to contact these members before proceeding with
 				// deletion
@@ -552,13 +557,34 @@ public class DBClient {
 			}
 
 			// Delete the course enrollments
+			System.out.println("Enrollment is being updated ...");
 			String deleteEnrollmentsQuery = "delete from umidmuzrapov.enrollment where courseName = ? and startDate = ?";
 			PreparedStatement deleteEnrollmentsStmt = dbconn.prepareStatement(deleteEnrollmentsQuery);
 			deleteEnrollmentsStmt.setString(1, className);
 			deleteEnrollmentsStmt.setDate(2, new java.sql.Date(startDate.getTime()));
 			deleteEnrollmentsStmt.executeUpdate();
+			System.out.println("Enrollment is updated.");
+			dbconn.commit();
 
 			// Delete the course
+			System.out.println("Deleting a course from package.");
+			String deleteCourseFromPackage = "delete from umidmuzrapov.CoursePackage where className=? and startDate=?";
+			PreparedStatement deleteCourseFromPackageStm = dbconn.prepareStatement(deleteCourseFromPackage);
+			deleteCourseFromPackageStm.setString(1, className);
+			deleteCourseFromPackageStm.setDate(2, new java.sql.Date(startDate.getTime()));
+			deleteCourseFromPackageStm.executeUpdate();
+			System.out.println("Deleted a course from package.");
+			
+			// deleting course schedule
+			System.out.println("Deleting a course from schedule.");
+			String deleteCourseFromSchedule = "delete from umidmuzrapov.Schedule where className=? and startDate=?";
+			PreparedStatement deleteCourseFromScheduleStm = dbconn.prepareStatement(deleteCourseFromSchedule );
+			deleteCourseFromScheduleStm.setString(1, className);
+			deleteCourseFromScheduleStm.setDate(2, new java.sql.Date(startDate.getTime()));
+			deleteCourseFromScheduleStm.executeUpdate();
+			System.out.println("Deleted a course from schedule.");
+			
+			
 			String deleteCourseQuery = "delete from umidmuzrapov.course where className = ? and startDate = ?";
 			PreparedStatement deleteCourseStmt = dbconn.prepareStatement(deleteCourseQuery);
 			deleteCourseStmt.setString(1, className);
@@ -566,6 +592,7 @@ public class DBClient {
 			deleteCourseStmt.executeUpdate();
 
 			dbconn.commit();
+			System.out.println("The course has been deleted.");
 			return true;
 
 		} catch (SQLException e) {
@@ -1300,5 +1327,7 @@ public class DBClient {
 			return "None";
 		}
 	}
+	
+	
 
 }
