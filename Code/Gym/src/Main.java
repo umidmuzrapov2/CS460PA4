@@ -29,7 +29,6 @@
  * Known bugs or incomplete parts: None is known.
  */
 
-
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.*;
@@ -43,26 +42,18 @@ import java.util.Scanner;
  * 	java.util.*
  * 	DBClient.java
  * 
- * Inherits from:
- * 	None
- * Interfaces:
- * 	None
+ * Inherits from: None Interfaces: None ----------------------------------------
+ * 
+ * Purpose: This class aims to execute the program, interact with the user,
+ * allow manage the gym, answer 4 queries.
  * ----------------------------------------
  * 
- * Purpose: 
- * 	This class aims to execute the program, interact with the user, allow manage the gym,
- *  answer 4 queries.
- * ----------------------------------------
+ * Constructor: The default constructor
  * 
- * Constructor:
- * 	The default constructor
+ * Class methods: void main(String[] args): the beginning point of the program.
  * 
- * Class methods:
- * 	void main(String[] args): the beginning point of the program.
- * 
- * Instance methods:
- * 	None
- */	
+ * Instance methods: None
+ */
 public class Main {
 
 	/**
@@ -191,7 +182,7 @@ public class Main {
 	/**
 	 * Method addMember
 	 * 
-	 * Purpose: This method adds a member to a relation Member.
+	 * Purpose: This method adds a member to a relation Member and adds package.
 	 * 
 	 * Pre-condition: Connection to the dbms has been successfully established.
 	 * 
@@ -213,10 +204,26 @@ public class Main {
 
 		// Call DBClient method to add member
 		String result = client.addMember(firstName, lastName, phone);
-		System.out.println(result);
-		// List course packages and allow member to select
-		// Method needs to be implemented here
-		// client.listAndSelectCoursePackage();
+		System.out.println("\n" + result);
+
+		if (result.startsWith("Member added successfully")) {
+			// Extract member number
+			String memberNumberStr = result.substring(result.lastIndexOf(":") + 1).trim();
+			int memberNumber = Integer.parseInt(memberNumberStr);
+			System.out.println("\nSelect a package to purchase: ");
+			List<String[]> packages = client.listAllPackagesAndCourses();
+			int counter = 1;
+			for (String[] pkg : packages) {
+				System.out.println(counter + ". " + pkg[0] + " | Price: " + pkg[1] + "\nCourses: " + pkg[2] + "\n");
+				counter++;
+			}
+			// Prompt the user to select a package
+			System.out.print("\nPlease enter the number of the package you wish to purchase: ");
+			int packageChoice = scanner.nextInt();
+			String transaction = client.packagePurchased(packages.get(packageChoice - 1)[0],
+					packages.get(packageChoice - 1)[1], memberNumber);
+			System.out.println("\n" + transaction);
+		}
 	}
 
 	/**
@@ -459,10 +466,10 @@ public class Main {
 	/**
 	 * Method addCoursePackage
 	 * 
-	 * Purpose:
-	 * 	This method add a tuple that represents 'Every course is a part of zero or more relationships'.	
-	 * 	When adding a course package, the system lists all available courses that
-	 * 	have not yet ended, allowing the admin to select which to include.
+	 * Purpose: This method add a tuple that represents 'Every course is a part of
+	 * zero or more relationships'. When adding a course package, the system lists
+	 * all available courses that have not yet ended, allowing the admin to select
+	 * which to include.
 	 * 
 	 * Pre-condition: Connection to the dbms has been successfully established.
 	 * 
@@ -534,10 +541,10 @@ public class Main {
 	/**
 	 * Method updateCoursePackage
 	 * 
-	 * Purpose:
-	 * 	This method updates a tuple that represents 'Every course is a part of zero or more relationships'.	
+	 * Purpose: This method updates a tuple that represents 'Every course is a part
+	 * of zero or more relationships'.
 	 * 
-     * Pre-condition: Connection to the dbms has been successfully established.
+	 * Pre-condition: Connection to the dbms has been successfully established.
 	 * 
 	 * Post-condition: a tuple is update.
 	 * 
@@ -593,17 +600,17 @@ public class Main {
 		scanner.nextLine(); // Consume the newline left-over
 
 		switch (choice) {
-			case 1:
-				// Call method to add a course to this package
-				addCourseToPackage(scanner, client, packageName);
-				break;
-			case 2:
-				// Call method to remove a course from this package
-				removeCourseFromPackage(scanner, client, packageName);
-				break;
-			default:
-				System.out.println("Invalid option. Operation cancelled.");
-				break;
+		case 1:
+			// Call method to add a course to this package
+			addCourseToPackage(scanner, client, packageName);
+			break;
+		case 2:
+			// Call method to remove a course from this package
+			removeCourseFromPackage(scanner, client, packageName);
+			break;
+		default:
+			System.out.println("Invalid option. Operation cancelled.");
+			break;
 		}
 	}
 
@@ -757,14 +764,10 @@ public class Main {
 	/**
 	 * Method getCoruseSchedule
 	 * 
-	 * Purpose:
-	 * 	This methods gets a set of schedule(s) for the course.
-	 * 	Expected format Day of the week, hour, minute, duration.
+	 * Purpose: This methods gets a set of schedule(s) for the course. Expected
+	 * format Day of the week, hour, minute, duration.
 	 * 
-	 * Pre-condition:
-	 * 	None
-	 * Post-condition:
-	 * 	At least one schedule is given.
+	 * Pre-condition: None Post-condition: At least one schedule is given.
 	 * 
 	 * @return a list of schedule which is represented by a list of integers.
 	 */
@@ -796,18 +799,16 @@ public class Main {
 	/**
 	 * Method parseSchedule
 	 * 
-	 * Purpose:
-	 * 	This method appropriately parse/formats the user input for schedule, so
-	 * 	it can be used for schedule insertion.
+	 * Purpose: This method appropriately parse/formats the user input for schedule,
+	 * so it can be used for schedule insertion.
 	 * 
-	 * Pre-condition:
-	 * 	Schedule elements are separated by a comma
+	 * Pre-condition: Schedule elements are separated by a comma
 	 * 
-	 * Post-condition:
-	 * 	None
+	 * Post-condition: None
 	 * 
 	 * @param line string that represent a schedule for the course
-	 * @return a list of integers that stand for day of the week, hour, minute, duration
+	 * @return a list of integers that stand for day of the week, hour, minute,
+	 *         duration
 	 */
 	private static List<Integer> parseSchedule(String line) {
 		List<Integer> schedule = new ArrayList<Integer>();
@@ -852,15 +853,12 @@ public class Main {
 	/**
 	 * Method isNumeric
 	 * 
-	 * Purpose:
-	 * 	The method checks if the number is numeric and returns its int value if so.
-	 * 	Otherwise, it returns -1.
+	 * Purpose: The method checks if the number is numeric and returns its int value
+	 * if so. Otherwise, it returns -1.
 	 * 
-	 * Pre-condition:
-	 * 	Input is positive.
+	 * Pre-condition: Input is positive.
 	 * 
-	 * Post-condition:
-	 * 	None
+	 * Post-condition: None
 	 * 
 	 * @param numberString a string whose int value is sought.
 	 * @return int value of numberString. -1 if the input is not a number.

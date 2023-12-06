@@ -3,48 +3,46 @@ import java.sql.Date;
 import java.util.*;
 
 /**
- * Class name: DBClient
- * Name: Umidjon Muzrapov, ...
+ * Class name: DBClient 
+ * 
+ * Name: Umidjon Muzrapov, Abdullah Alkhamis, Hamad Marhoon, Yahya Al Malallah
+ *  
  * Dependencies: 
- * 	java.sql.*
- * 	java.util.*
+ * java.sql.*
+ * java.util.*
  * 
- * Inherits from:
- * 	None
- * Interfaces:
- * 	None
+ * Inherits from: None Interfaces: None ----------------------------------------
+ * 
+ * Purpose: This class aims to provide easy-to-use interface to communicate with
+ * the dbms.
+ * 
  * ----------------------------------------
  * 
- * Purpose: 
- * 	This class aims to provide easy-to-use interface to communicate with the dbms.
- * 	
- * ----------------------------------------
+ * Constructor: DBClient(String[] args) String[] -- username and password for
+ * db.
  * 
- * Constructor:
- * 	DBClient(String[] args)
- * 		String[] -- username and password for db.
+ * Class methods: void main(String[] args): the beginning point of the program.
  * 
- * Class methods:
- * 	void main(String[] args): the beginning point of the program.
- * 
- * Instance methods:
- * 	addCourse​(java.lang.String className, int maxParticipant, int currentParticipant, java.sql.Date startDate, java.sql.Date endDate, java.util.List<java.util.List<java.lang.Integer>> schedules)
- *  addCoursePackage​(java.lang.String packageName, java.util.List<java.lang.String[]> selectedCourses)
- *  addMember​(java.lang.String firstName, java.lang.String lastName, java.lang.String phoneNumber)
- *  addPackage​(java.lang.String packageName, int packagePrice)	
-	deleteCourse​(java.lang.String className, java.sql.Date startDate)
-	deleteCoursePackage​(java.lang.String packageName)
- *  deleteMember​(int memberNumber)
- *  deleteMember​(int memberNumber)
- *  listCoursesInPackage​(java.lang.String packageName)
- *  listOngoingCourses()
- *  memberExists​(java.lang.String firstname, java.lang.String lastname)
- *  printCourseSchedule​(java.lang.String firstname, java.lang.String lastname)
- *  queryOne()
- *  queryThree()
- *  queryTwo​(int memberNumber)
- *  	removeCourseFromPackage​(java.lang.String packageName, java.lang.String className, java.lang.String startDate)
- */	
+ * Instance methods: addCourse​(java.lang.String className, int maxParticipant,
+ * int currentParticipant, java.sql.Date startDate, java.sql.Date endDate,
+ * java.util.List<java.util.List<java.lang.Integer>> schedules)
+ * addCoursePackage​(java.lang.String packageName,
+ * java.util.List<java.lang.String[]> selectedCourses)
+ * addMember​(java.lang.String firstName, java.lang.String lastName,
+ * java.lang.String phoneNumber) addPackage​(java.lang.String packageName, int
+ * packagePrice) deleteCourse​(java.lang.String className, java.sql.Date
+ * startDate) deleteCoursePackage​(java.lang.String packageName)
+ * deleteMember​(int memberNumber) deleteMember​(int memberNumber)
+ * listCoursesInPackage​(java.lang.String packageName) listOngoingCourses()
+ * memberExists​(java.lang.String firstname, java.lang.String lastname)
+ * printCourseSchedule​(java.lang.String firstname, java.lang.String lastname)
+ * queryOne() queryThree() queryTwo​(int memberNumber)
+ * removeCourseFromPackage​(java.lang.String packageName, java.lang.String
+ * className, java.lang.String startDate)
+ * removeCourseFromPackage​(java.lang.String packageName, java.lang.String
+ * className, java.lang.String startDate) updateCoursePackage​(java.lang.String
+ * packageName, java.util.List<java.lang.String[]> updatedCourses)
+ */
 public class DBClient {
 
 	// the field hold connection to db
@@ -537,6 +535,7 @@ public class DBClient {
 			ResultSet enrolledMembers = enrolledStmt.executeQuery();
 
 			boolean hasEnrolledMembers = false;
+			System.out.println("Notigy these members");
 			while (enrolledMembers.next()) {
 				hasEnrolledMembers = true;
 				String memberName = enrolledMembers.getString("fname") + " " + enrolledMembers.getString("lname");
@@ -544,6 +543,8 @@ public class DBClient {
 				System.out.println("Member: " + memberName + ", Phone: " + phoneNumber);
 			}
 
+			System.out.println("Notification is done.");
+			hasEnrolledMembers = false;
 			if (hasEnrolledMembers) {
 				// Notify the admin/user to contact these members before proceeding with
 				// deletion
@@ -552,13 +553,33 @@ public class DBClient {
 			}
 
 			// Delete the course enrollments
+			System.out.println("Enrollment is being updated ...");
 			String deleteEnrollmentsQuery = "delete from umidmuzrapov.enrollment where courseName = ? and startDate = ?";
 			PreparedStatement deleteEnrollmentsStmt = dbconn.prepareStatement(deleteEnrollmentsQuery);
 			deleteEnrollmentsStmt.setString(1, className);
 			deleteEnrollmentsStmt.setDate(2, new java.sql.Date(startDate.getTime()));
 			deleteEnrollmentsStmt.executeUpdate();
+			System.out.println("Enrollment is updated.");
+			dbconn.commit();
 
 			// Delete the course
+			System.out.println("Deleting a course from package.");
+			String deleteCourseFromPackage = "delete from umidmuzrapov.CoursePackage where className=? and startDate=?";
+			PreparedStatement deleteCourseFromPackageStm = dbconn.prepareStatement(deleteCourseFromPackage);
+			deleteCourseFromPackageStm.setString(1, className);
+			deleteCourseFromPackageStm.setDate(2, new java.sql.Date(startDate.getTime()));
+			deleteCourseFromPackageStm.executeUpdate();
+			System.out.println("Deleted a course from package.");
+
+			// deleting course schedule
+			System.out.println("Deleting a course from schedule.");
+			String deleteCourseFromSchedule = "delete from umidmuzrapov.Schedule where className=? and startDate=?";
+			PreparedStatement deleteCourseFromScheduleStm = dbconn.prepareStatement(deleteCourseFromSchedule);
+			deleteCourseFromScheduleStm.setString(1, className);
+			deleteCourseFromScheduleStm.setDate(2, new java.sql.Date(startDate.getTime()));
+			deleteCourseFromScheduleStm.executeUpdate();
+			System.out.println("Deleted a course from schedule.");
+
 			String deleteCourseQuery = "delete from umidmuzrapov.course where className = ? and startDate = ?";
 			PreparedStatement deleteCourseStmt = dbconn.prepareStatement(deleteCourseQuery);
 			deleteCourseStmt.setString(1, className);
@@ -566,6 +587,7 @@ public class DBClient {
 			deleteCourseStmt.executeUpdate();
 
 			dbconn.commit();
+			System.out.println("The course has been deleted.");
 			return true;
 
 		} catch (SQLException e) {
@@ -1342,6 +1364,108 @@ public class DBClient {
 			return "Sunday";
 		default:
 			return "None";
+		}
+	}
+
+	/**
+	 * Method listAllPackagesAndCourses
+	 *
+	 * Purpose: retrieves a list of all packages along with their costs and associated courses.
+	 *
+	 * Pre-condition: the package and coursePackage tables exist and are accessible.
+	 * 
+	 * Post-condition: returns a list of String arrays, each containing package name, cost, and courses.
+	 * 
+	 * @return list of all the package information
+	 */
+
+	public List<String[]> listAllPackagesAndCourses() {
+		List<String[]> packageDetails = new ArrayList<>();
+		try {
+			String query = "select p.packageName, p.cost, LISTAGG(cp.className, ', ') within group (order by cp.className) as courses "
+					+ "from umidmuzrapov.Package p join umidmuzrapov.coursepackage cp on p.packageName = cp.packageName "
+					+ "group by p.packageName, p.cost";
+			Statement statement = dbconn.createStatement();
+			ResultSet resultSet = statement.executeQuery(query);
+			while (resultSet.next()) {
+				String packageName = resultSet.getString("packageName");
+				double cost = resultSet.getDouble("cost");
+				String courses = resultSet.getString("courses");
+				packageDetails.add(new String[] { packageName, Double.toString(cost), courses });
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return packageDetails;
+	}
+
+	/**
+	 * Method packagePurchased
+	 *
+	 * Purpose: when a member purchases a package, it adds the transaction to the table,
+	 * records the purchase, updates the course participants for each course in the package,
+	 * and finally updates the member levelId based on amount spent.
+	 *
+	 * Pre-condition: chosen package name, its cost, and the memberNumber
+	 * 
+	 * Post-condition: returns a string confirming the purchase of a package.
+	 * 
+	 * @return conformation message;
+	 */
+	public String packagePurchased(String packageName, String cost, int memberNumber) {
+		try {
+			dbconn.setAutoCommit(false);
+			// Get max transaction number
+			String maxTransactionNumberQuery = "select MAX(transactionNumber) from umidmuzrapov.transaction";
+			Statement maxTransactionNumberStmt = dbconn.createStatement();
+			ResultSet rs = maxTransactionNumberStmt.executeQuery(maxTransactionNumberQuery);
+			int nextTransactionNumber = 1;
+			if (rs.next()) {
+				nextTransactionNumber = rs.getInt(1) + 1;
+			}
+
+			// Step 1: Add a transaction for the package purchase
+			String transactionQuery = String.format(
+					"insert into umidmuzrapov.transaction (transactionNumber, memberNumber, total, transactionDate, type) "
+							+ "VALUES (%d, %d, %f, CURRENT_DATE, 'deposit')",
+					nextTransactionNumber, memberNumber, Double.parseDouble(cost));
+			Statement transactionStmt = dbconn.createStatement();
+			transactionStmt.executeUpdate(transactionQuery);
+
+			// Step 2: Add the package to the Purchase table
+			String purchaseQuery = String.format(
+					"insert into umidmuzrapov.purchase (packageName, transactionNumber) VALUES ('%s', %d)", packageName,
+					nextTransactionNumber);
+			Statement purchaseStmt = dbconn.createStatement();
+			purchaseStmt.executeUpdate(purchaseQuery);
+
+			// Step 3: Update the currentParticipants for each course in the package
+			String updateParticipantsQuery = String.format(
+					"update umidmuzrapov.course set currentParticipant = currentParticipant + 1 where "
+							+ "(className, startDate) in (select className, startDate from umidmuzrapov.coursepackage where packageName = '%s')",
+					packageName);
+			Statement updateParticipantsStmt = dbconn.createStatement();
+			updateParticipantsStmt.executeUpdate(updateParticipantsQuery);
+
+			// Step 4: Update the member's levelId
+			String levelUpdateQuery = String.format(
+					"update umidmuzrapov.member set levelId = case when (select SUM(total) "
+							+ "from umidmuzrapov.transaction where memberNumber = %d) >= 1000 then 3 when (select SUM(total) from umidmuzrapov.transaction "
+							+ "where memberNumber = %d) >= 500 THEN 2 ELSE levelId END WHERE memberNumber = %d",
+					memberNumber, memberNumber, memberNumber);
+			Statement levelUpdateStmt = dbconn.createStatement();
+			levelUpdateStmt.executeUpdate(levelUpdateQuery);
+
+			dbconn.commit(); // Commit transaction if all operations are successful
+			return "Package purchased successfully!";
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback(); // Rollback transaction in case of error
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return "Package purchase error";
 		}
 	}
 
