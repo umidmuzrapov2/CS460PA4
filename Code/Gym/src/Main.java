@@ -359,17 +359,94 @@ public class Main {
 }
 
 	private static void updateCoursePackage(Scanner scanner, DBClient client) {
-		System.out.println("Updating a course package.");
-		// First, list all available course packages to select from
-		// Will be implemented
-		// client.listCoursePackages();
+		System.out.println("Select a course package to update:");
+		List<String> packages = client.listAllPackages();
+		for (int i = 0; i < packages.size(); i++) {
+			System.out.println((i + 1) + ". " + packages.get(i));
+		}
 
-		System.out.print("Enter the name of the course package to update: ");
-		String packageName = scanner.nextLine();
-		List<String[]> selectedCourses = new ArrayList<>();
+		int choice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
+		if (choice < 1 || choice > packages.size()) {
+			System.out.println("Invalid choice. Operation cancelled.");
+			return;
+		}
 
-		client.updateCoursePackage(packageName, selectedCourses);
+		String packageName = packages.get(choice - 1);
+		editSelectedPackage(scanner, client, packageName);
 	}
+
+	private static void editSelectedPackage(Scanner scanner, DBClient client, String packageName) {
+		System.out.println("Editing package: " + packageName);
+		System.out.println("1. Add a course");
+		System.out.println("2. Remove a course");
+
+		int choice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
+
+		switch (choice) {
+			case 1:
+				// Call method to add a course to this package
+				addCourseToPackage(scanner, client, packageName);
+				break;
+			case 2:
+				// Call method to remove a course from this package
+				removeCourseFromPackage(scanner, client, packageName);
+				break;
+			default:
+				System.out.println("Invalid option. Operation cancelled.");
+				break;
+		}
+	}
+
+	private static void addCourseToPackage(Scanner scanner, DBClient client, String packageName) {
+		System.out.println("Select a course to add to the package '" + packageName + "':");
+		List<String[]> allCourses = client.listOngoingCourses();
+		for (int i = 0; i < allCourses.size(); i++) {
+			String[] course = allCourses.get(i);
+			System.out.println((i + 1) + ". " + course[0] + " (Start Date: " + course[1] + ")");
+		}
+
+		System.out.print("Enter the number of the course to add: ");
+		int courseIndex = scanner.nextInt() - 1;
+		scanner.nextLine(); // Consume the newline left-over
+
+		if (courseIndex >= 0 && courseIndex < allCourses.size()) {
+			String[] selectedCourse = allCourses.get(courseIndex);
+			if (client.addCourseToPackage(packageName, selectedCourse[0], selectedCourse[1])) {
+				System.out.println("Course added successfully to the package.");
+			} else {
+				System.out.println("Failed to add course to the package.");
+			}
+		} else {
+			System.out.println("Invalid course selection.");
+		}
+	}
+
+	private static void removeCourseFromPackage(Scanner scanner, DBClient client, String packageName) {
+		System.out.println("Select a course to remove from the package '" + packageName + "':");
+		List<String[]> packageCourses = client.listCoursesInPackage(packageName);
+		for (int i = 0; i < packageCourses.size(); i++) {
+			String[] course = packageCourses.get(i);
+			System.out.println((i + 1) + ". " + course[0] + " (Start Date: " + course[1] + ")");
+		}
+
+		System.out.print("Enter the number of the course to remove: ");
+		int courseIndex = scanner.nextInt() - 1;
+		scanner.nextLine(); // Consume the newline left-over
+
+		if (courseIndex >= 0 && courseIndex < packageCourses.size()) {
+			String[] selectedCourse = packageCourses.get(courseIndex);
+			if (client.removeCourseFromPackage(packageName, selectedCourse[0], selectedCourse[1])) {
+				System.out.println("Course removed successfully from the package.");
+			} else {
+				System.out.println("Failed to remove course from the package.");
+			}
+		} else {
+			System.out.println("Invalid course selection.");
+		}
+	}
+
 
 	private static void deleteCoursePackage(Scanner scanner, DBClient client) {
     System.out.println("Select a course package to delete:");

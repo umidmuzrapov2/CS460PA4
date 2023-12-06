@@ -453,6 +453,54 @@ public class DBClient {
 		}
 	}
 
+	public List<String[]> listCoursesInPackage(String packageName) {
+		List<String[]> courses = new ArrayList<>();
+		String query = "SELECT className, startDate FROM umidmuzrapov.CoursePackage WHERE packageName = ?";
+		try (PreparedStatement preparedStatement = dbconn.prepareStatement(query)) {
+			preparedStatement.setString(1, packageName);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					String className = resultSet.getString("className");
+					Date startDate = resultSet.getDate("startDate");
+					courses.add(new String[] { className, startDate.toString() });
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return courses;
+	}
+
+	public boolean removeCourseFromPackage(String packageName, String className, String startDate) {
+		String deleteQuery = "DELETE FROM umidmuzrapov.CoursePackage WHERE packageName = ? AND className = ? AND startDate = ?";
+
+		try (PreparedStatement preparedStatement = dbconn.prepareStatement(deleteQuery)) {
+			preparedStatement.setString(1, packageName);
+			preparedStatement.setString(2, className);
+			preparedStatement.setDate(3, Date.valueOf(startDate));
+			preparedStatement.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public boolean addCourseToPackage(String packageName, String className, String startDate) {
+		String insertQuery = "INSERT INTO umidmuzrapov.CoursePackage (packageName, className, startDate) VALUES (?, ?, ?)";
+
+		try (PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery)) {
+			preparedStatement.setString(1, packageName);
+			preparedStatement.setString(2, className);
+			preparedStatement.setDate(3, Date.valueOf(startDate));
+			preparedStatement.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public List<String[]> listOngoingCourses() {
 		List<String[]> ongoingCourses = new ArrayList<>();
 		try {
