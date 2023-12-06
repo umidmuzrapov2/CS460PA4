@@ -542,23 +542,6 @@ public class Main {
 		}
 	}
 
-	private static void updateCoursePackage(Scanner scanner, DBClient client) {
-		System.out.println("Select a course package to update:");
-		List<String> packages = client.listAllPackages();
-		for (int i = 0; i < packages.size(); i++) {
-			System.out.println((i + 1) + ". " + packages.get(i));
-		}
-
-		int choice = scanner.nextInt();
-		scanner.nextLine(); // Consume the newline left-over
-		if (choice < 1 || choice > packages.size()) {
-			System.out.println("Invalid choice. Operation cancelled.");
-			return;
-		}
-
-		String packageName = packages.get(choice - 1);
-		editSelectedPackage(scanner, client, packageName);
-	}
 
 	private static void editSelectedPackage(Scanner scanner, DBClient client, String packageName) {
 		System.out.println("Editing package: " + packageName);
