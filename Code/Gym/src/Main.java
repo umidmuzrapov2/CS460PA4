@@ -4,366 +4,367 @@ import java.util.Scanner;
 
 public class Main {
 
-  /**
-   * Method main
-   *
-   * Purpose:
-   * 	This is the entry point of the program.
-   * 	It coordinates the tasks to accomplish the purpose of this program.
-   *
-   * Pre-condition:
-   * 	The user either pass two command-line arguments (their username
-   * 	and password to Oracle) or does not pass anything.
-   *
-   * 	Relations are populated and data is well-formatted.
-   *
-   * 	Oracle JDBC driver is added to the CLASSPATH:
-   * 		source add_class_path
-   *
-   * Post-condition:
-   * 	None.
-   *
-   * @param args (Into this method) command-line arguments. Might be the username and password to Oracle.
-   */
-  public static void main(String[] args) {
-    // Create a DBClient instance
-    DBClient client = new DBClient(args);
-    try (Scanner scanner = new Scanner(System.in)) {
-      boolean running = true;
-      while (running) {
-        System.out.println("\n--- Main Menu ---");
-        System.out.println("1. Record Operations");
-        System.out.println("2. Query Database");
-        System.out.println("3. Exit");
-        System.out.print("Select an option: ");
+	/**
+	 * Method main
+	 *
+	 * Purpose: This is the entry point of the program. It coordinates the tasks to
+	 * accomplish the purpose of this program.
+	 *
+	 * Pre-condition: The user either pass two command-line arguments (their
+	 * username and password to Oracle) or does not pass anything.
+	 *
+	 * Relations are populated and data is well-formatted.
+	 *
+	 * Oracle JDBC driver is added to the CLASSPATH: source add_class_path
+	 *
+	 * Post-condition: None.
+	 *
+	 * @param args (Into this method) command-line arguments. Might be the username
+	 *             and password to Oracle.
+	 */
+	public static void main(String[] args) {
+		// Create a DBClient instance
+		DBClient client = new DBClient(args);
+		try (Scanner scanner = new Scanner(System.in)) {
+			boolean running = true;
+			while (running) {
+				System.out.println("\n--- Main Menu ---");
+				System.out.println("1. Record Operations");
+				System.out.println("2. Query Database");
+				System.out.println("3. Exit");
+				System.out.print("Select an option: ");
 
-        int choice = scanner.nextInt();
-        switch (choice) {
-          case 1:
-            handleRecordOperations(scanner, client);
-            break;
-          case 2:
-            handleQueries(scanner, client);
-            break;
-          case 3:
-            running = false;
-            System.out.println("Exiting program.");
-            break;
-          default:
-            System.out.println("Invalid option. Please try again.");
-        }
-      }
-    } catch (Exception e) {
-      System.out.println("An error occurred: " + e.getMessage());
-    }
-  }
+				int choice = scanner.nextInt();
+				switch (choice) {
+				case 1:
+					handleRecordOperations(scanner, client);
+					break;
+				case 2:
+					handleQueries(scanner, client);
+					break;
+				case 3:
+					running = false;
+					System.out.println("Exiting program.");
+					break;
+				default:
+					System.out.println("Invalid option. Please try again.");
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("An error occurred: " + e.getMessage());
+		}
+	}
 
-  private static void handleRecordOperations(Scanner scanner, DBClient client) {
-    System.out.println("\n--- Record Operations ---");
-    System.out.println("1. Add/Delete Member");
-    System.out.println("2. Add/Delete Course");
-    System.out.println("3. Add/Update/Delete Course Package");
-    System.out.print("Select an operation: ");
+	private static void handleRecordOperations(Scanner scanner, DBClient client) {
+		System.out.println("\n--- Record Operations ---");
+		System.out.println("1. Add/Delete Member");
+		System.out.println("2. Add/Delete Course");
+		System.out.println("3. Add/Update/Delete Course Package");
+		System.out.print("Select an operation: ");
 
-    int operation = scanner.nextInt();
-    scanner.nextLine(); // Consume the remaining newline
+		int operation = scanner.nextInt();
+		scanner.nextLine(); // Consume the remaining newline
 
-    switch (operation) {
-      case 1:
-        handleMemberOperations(scanner, client);
-        break;
-      case 2:
-        handleCourseOperations(scanner, client);
-        break;
-      case 3:
-        handleCoursePackageOperations(scanner, client);
-        break;
-      default:
-        System.out.println("Invalid operation. Please try again.");
-    }
-  }
+		switch (operation) {
+		case 1:
+			handleMemberOperations(scanner, client);
+			break;
+		case 2:
+			handleCourseOperations(scanner, client);
+			break;
+		case 3:
+			handleCoursePackageOperations(scanner, client);
+			break;
+		default:
+			System.out.println("Invalid operation. Please try again.");
+		}
+	}
 
-  private static void handleMemberOperations(Scanner scanner, DBClient client) {
-    System.out.println("\n--- Member Operations ---");
-    System.out.println("1. Add Member");
-    System.out.println("2. Delete Member");
-    System.out.print("Select an option: ");
+	private static void handleMemberOperations(Scanner scanner, DBClient client) {
+		System.out.println("\n--- Member Operations ---");
+		System.out.println("1. Add Member");
+		System.out.println("2. Delete Member");
+		System.out.print("Select an option: ");
 
-    int option = scanner.nextInt();
-    scanner.nextLine(); // Consume newline
+		int option = scanner.nextInt();
+		scanner.nextLine(); // Consume newline
 
-    switch (option) {
-      case 1:
-        addMember(scanner, client);
-        break;
-      case 2:
-        deleteMember(scanner, client);
-        break;
-      default:
-        System.out.println("Invalid option. Please try again.");
-    }
-  }
+		switch (option) {
+		case 1:
+			addMember(scanner, client);
+			break;
+		case 2:
+			deleteMember(scanner, client);
+			break;
+		default:
+			System.out.println("Invalid option. Please try again.");
+		}
+	}
 
-  private static void addMember(Scanner scanner, DBClient client) {
-    System.out.println("Adding a new member.");
-    System.out.print("Enter member's first name: ");
-    String firstName = scanner.nextLine();
+	private static void addMember(Scanner scanner, DBClient client) {
+		System.out.println("Adding a new member.");
+		System.out.print("Enter member's first name: ");
+		String firstName = scanner.nextLine();
 
-    System.out.print("Enter member's last name: ");
-    String lastName = scanner.nextLine();
+		System.out.print("Enter member's last name: ");
+		String lastName = scanner.nextLine();
 
-    System.out.print("Enter member's phone number: ");
-    String phone = scanner.nextLine();
+		System.out.print("Enter member's phone number: ");
+		String phone = scanner.nextLine();
 
-    // Call DBClient method to add member
-    String result = client.addMember(firstName, lastName, phone);
-    System.out.println(result);
-    // List course packages and allow member to select
-    // Method needs to be implemented here
-    //client.listAndSelectCoursePackage();
-  }
+		// Call DBClient method to add member
+		String result = client.addMember(firstName, lastName, phone);
+		System.out.println(result);
+		// List course packages and allow member to select
+		// Method needs to be implemented here
+		// client.listAndSelectCoursePackage();
+	}
 
-  private static void deleteMember(Scanner scanner, DBClient client) {
-    System.out.println("Deleting a member.");
-    System.out.print("Enter member's number: ");
-    int memberNumber = scanner.nextInt();
-    String result = client.deleteMember(memberNumber);
-    System.out.println(result);
-  }
+	private static void deleteMember(Scanner scanner, DBClient client) {
+		System.out.println("Deleting a member.");
+		System.out.print("Enter member's number: ");
+		int memberNumber = scanner.nextInt();
+		String result = client.deleteMember(memberNumber);
+		System.out.println(result);
+	}
 
-  private static void handleQueries(Scanner scanner, DBClient client) {
-    System.out.println("\n--- Queries ---");
-    System.out.println("1. List members with negative balance");
-    System.out.println("2. Check a member's class schedule for November");
-    System.out.println("3. View trainers' working hours for December");
-    System.out.println("4. Custom Query");
-    System.out.print("Select a query: ");
+	private static void handleQueries(Scanner scanner, DBClient client) {
+		System.out.println("\n--- Queries ---");
+		System.out.println("1. List members with negative balance");
+		System.out.println("2. Check a member's class schedule for November");
+		System.out.println("3. View trainers' working hours for December");
+		System.out.println("4. Custom Query");
+		System.out.print("Select a query: ");
 
-    int query = scanner.nextInt();
-    scanner.nextLine(); // Consume the remaining newline
+		int query = scanner.nextInt();
+		scanner.nextLine(); // Consume the remaining newline
 
-    switch (query) {
-      case 1:
-        // Call method to handle query 1
-        break;
-      case 2:
-        // Call method to handle query 2
-        break;
-      case 3:
-        // Call method to handle query 3
-        break;
-      case 4:
-        // Call method to handle custom query
-        break;
-      default:
-        System.out.println("Invalid query. Please try again.");
-    }
-  }
+		switch (query) {
+		case 1:
+			List<String[]> queryOneResults = client.queryOne();
+			if (queryOneResults.size() == 0) {
+				System.out.println("\nThere are no current members with negative balance.");
+			} else {
+				System.out.println("\nMembers with negative balance:");
+				for (String[] member : queryOneResults) {
+					System.out.println("Name: " + member[0] + " | Phone: " + member[1] + " | Balance: " + member[2]);
+				}
+			}
+			break;
+		case 2:
+			System.out.print("Enter member number: ");
+			int memberNumber = scanner.nextInt();
+			List<String[]> queryTwoResult = client.queryTwo(memberNumber);
+			if (queryTwoResult.size() == 0) {
+				System.out.println("\nThe member has no classes in November.");
+			} else {
+				System.out.println("\nMember's November schedule:");
+				for (String[] schedule : queryTwoResult) {
+					System.out.println("Course: " + schedule[0] + " | Day: "
+							+ schedule[3] + " | Time: " + schedule[4] + ":"
+							+ schedule[5] + " | Duration: " + schedule[6] + " minutes");
+				}
+			}
+			break;
+		case 3:
+			// Call method to handle query 3
+			break;
+		case 4:
+			// Call method to handle custom query
+			break;
+		default:
+			System.out.println("Invalid query. Please try again.");
+		}
+	}
 
-  private static void handleCourseOperations(Scanner scanner, DBClient client) {
-    System.out.println("\n--- Course Operations ---");
-    System.out.println("1. Add Course");
-    System.out.println("2. Delete Course");
-    System.out.print("Select an option: ");
+	private static void handleCourseOperations(Scanner scanner, DBClient client) {
+		System.out.println("\n--- Course Operations ---");
+		System.out.println("1. Add Course");
+		System.out.println("2. Delete Course");
+		System.out.print("Select an option: ");
 
-    int option = scanner.nextInt();
-    scanner.nextLine(); // Consume newline
+		int option = scanner.nextInt();
+		scanner.nextLine(); // Consume newline
 
-    switch (option) {
-      case 1:
-        addCourse(scanner, client);
-        break;
-      case 2:
-        deleteCourse(scanner, client);
-        break;
-      default:
-        System.out.println("Invalid option. Please try again.");
-    }
-  }
+		switch (option) {
+		case 1:
+			addCourse(scanner, client);
+			break;
+		case 2:
+			deleteCourse(scanner, client);
+			break;
+		default:
+			System.out.println("Invalid option. Please try again.");
+		}
+	}
 
-  private static void addCourse(Scanner scanner, DBClient client) {
-    System.out.println("Adding a new course.");
-    System.out.print("Enter course name: ");
-    String courseName = scanner.nextLine();
-    System.out.print("Enter maximum number of course participants: ");
-    int maxParticipants = scanner.nextInt();
-    scanner.nextLine();
-    
-    System.out.print("Enter current number of course participants: ");
-    int curParticipants = scanner.nextInt();
-    scanner.nextLine();
-    
-    System.out.print("Enter course start date (yyyy-mm-dd): ");
-    Date startDate = Date.valueOf(scanner.nextLine());
-    System.out.print("Enter course end date (yyyy-mm-dd): ");
-    Date endDate = Date.valueOf(scanner.nextLine());
-    List<List<Integer>> schedules = getSchedule();
+	private static void addCourse(Scanner scanner, DBClient client) {
+		System.out.println("Adding a new course.");
+		System.out.print("Enter course name: ");
+		String courseName = scanner.nextLine();
+		System.out.print("Enter maximum number of course participants: ");
+		int maxParticipants = scanner.nextInt();
+		scanner.nextLine();
 
-    // Call DBClient method to add the course
-    client.addCourse(
-      courseName,
-      maxParticipants,
-      curParticipants,
-      startDate,
-      endDate,
-      schedules
-    );
-  }
+		System.out.print("Enter current number of course participants: ");
+		int curParticipants = scanner.nextInt();
+		scanner.nextLine();
 
-  private static void deleteCourse(Scanner scanner, DBClient client) {
-    System.out.println("Deleting a course.");
-    System.out.print("Enter course name: ");
-    String courseName = scanner.nextLine();
-    System.out.print("Enter course start date: ");
-    Date startDate = Date.valueOf(scanner.nextLine());
+		System.out.print("Enter course start date (yyyy-mm-dd): ");
+		Date startDate = Date.valueOf(scanner.nextLine());
+		System.out.print("Enter course end date (yyyy-mm-dd): ");
+		Date endDate = Date.valueOf(scanner.nextLine());
+		List<List<Integer>> schedules = getSchedule();
 
-    client.deleteCourse(courseName, startDate);
-  }
+		// Call DBClient method to add the course
+		client.addCourse(courseName, maxParticipants, curParticipants, startDate, endDate, schedules);
+	}
 
-  private static void handleCoursePackageOperations(
-    Scanner scanner,
-    DBClient client
-  ) {
-    System.out.println("\n--- Course Package Operations ---");
-    System.out.println("1. Add Course Package");
-    System.out.println("2. Update Course Package");
-    System.out.println("3. Delete Course Package");
-    System.out.print("Select an option: ");
+	private static void deleteCourse(Scanner scanner, DBClient client) {
+		System.out.println("Deleting a course.");
+		System.out.print("Enter course name: ");
+		String courseName = scanner.nextLine();
+		System.out.print("Enter course start date: ");
+		Date startDate = Date.valueOf(scanner.nextLine());
 
-    int option = scanner.nextInt();
-    scanner.nextLine(); // Consume newline
+		client.deleteCourse(courseName, startDate);
+	}
 
-    switch (option) {
-      case 1:
-        addCoursePackage(scanner, client);
-        break;
-      case 2:
-        updateCoursePackage(scanner, client);
-        break;
-      case 3:
-        deleteCoursePackage(scanner, client);
-        break;
-      default:
-        System.out.println("Invalid option. Please try again.");
-    }
-  }
+	private static void handleCoursePackageOperations(Scanner scanner, DBClient client) {
+		System.out.println("\n--- Course Package Operations ---");
+		System.out.println("1. Add Course Package");
+		System.out.println("2. Update Course Package");
+		System.out.println("3. Delete Course Package");
+		System.out.print("Select an option: ");
 
-  private static void addCoursePackage(Scanner scanner, DBClient client) {
-    System.out.println("Adding a new course package.");
-    System.out.print("Enter the name of the course package to add: ");
-    String packageName = scanner.nextLine();
-    List<String[]> selectedCourses = new ArrayList<>();
+		int option = scanner.nextInt();
+		scanner.nextLine(); // Consume newline
 
-    client.addCoursePackage(packageName, selectedCourses);
-    // Additional logic to input course package details
-    // Method to be implemented here to list course packages
+		switch (option) {
+		case 1:
+			addCoursePackage(scanner, client);
+			break;
+		case 2:
+			updateCoursePackage(scanner, client);
+			break;
+		case 3:
+			deleteCoursePackage(scanner, client);
+			break;
+		default:
+			System.out.println("Invalid option. Please try again.");
+		}
+	}
 
-    // Call DBClient method to add the course package
-    // client.addCoursePackage(packageDetails);
-  }
+	private static void addCoursePackage(Scanner scanner, DBClient client) {
+		System.out.println("Adding a new course package.");
+		System.out.print("Enter the name of the course package to add: ");
+		String packageName = scanner.nextLine();
+		List<String[]> selectedCourses = new ArrayList<>();
 
-  private static void updateCoursePackage(Scanner scanner, DBClient client) {
-    System.out.println("Updating a course package.");
-    // First, list all available course packages to select from
-    // Will be implemented
-    // client.listCoursePackages();
+		client.addCoursePackage(packageName, selectedCourses);
+		// Additional logic to input course package details
+		// Method to be implemented here to list course packages
 
-    System.out.print("Enter the name of the course package to update: ");
-    String packageName = scanner.nextLine();
-    List<String[]> selectedCourses = new ArrayList<>();
+		// Call DBClient method to add the course package
+		// client.addCoursePackage(packageDetails);
+	}
 
-    client.updateCoursePackage(packageName, selectedCourses);
-  }
+	private static void updateCoursePackage(Scanner scanner, DBClient client) {
+		System.out.println("Updating a course package.");
+		// First, list all available course packages to select from
+		// Will be implemented
+		// client.listCoursePackages();
 
-  private static void deleteCoursePackage(Scanner scanner, DBClient client) {
-    System.out.println("Deleting a course package.");
-    // First, list all available course packages to select from
-    // Will be implemented
-    // client.listCoursePackages();
+		System.out.print("Enter the name of the course package to update: ");
+		String packageName = scanner.nextLine();
+		List<String[]> selectedCourses = new ArrayList<>();
 
-    System.out.print("Enter the name of the course package to delete: ");
-    String packageName = scanner.nextLine();
-    List<String[]> selectedCourses;
+		client.updateCoursePackage(packageName, selectedCourses);
+	}
 
-    client.deleteCoursePackage(packageName);
-  }
-  
-  private static List<List<Integer>> getSchedule()
-  {
-	  System.out.println("Enter the schedule for course or done:");
-	  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
-	  List<List<Integer>> schedules = new ArrayList<List<Integer>>();
-	  Scanner keyboard=  new Scanner(System.in);
-	  String line = keyboard.nextLine();
-	  
-	  while (!line.trim().equalsIgnoreCase("done")) {
-		  // formatted line
-		  List<Integer> schedule = parseSchedule(line);
-		  if (schedule == null) {
-			  System.out.println("The wrong format.");
-		  } else {
-			  System.out.println("Schedule is noted.");
-			  schedules.add(schedule);
-		  }
-		  
-		  System.out.println("Enter the schedule for course or done:");
-		  System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
-		  line = keyboard.nextLine();
-	  }
-	  
-	  return schedules;
-  }
-  
-  private static List<Integer> parseSchedule(String line)
-  {
-	  List<Integer> schedule = new ArrayList<Integer>();
-	  String[] words = line.split(",");
-      Map<String, Integer> dayOfWeekMap = new HashMap<String, Integer>();
-      
-      // Adding entries to the map
-      dayOfWeekMap.put("Monday", 1);
-      dayOfWeekMap.put("Tuesday", 2);
-      dayOfWeekMap.put("Wednesday", 3);
-      dayOfWeekMap.put("Thursday", 4);
-      dayOfWeekMap.put("Friday", 5);
-      dayOfWeekMap.put("Saturday", 6);
-      dayOfWeekMap.put("Sunday", 7);
-      
-      if (words.length !=4) {
-    	  System.out.println("The wrong number of arguments.");
-    	  return null;
-      }
-      
-      if (!dayOfWeekMap.containsKey(words[0])) {
-    	  System.out.println("The day of the week does not exist.");
-    	  return null;
-      }
-	  
-      schedule.add(dayOfWeekMap.get(words[0]));
-      for (int i =1; i<4; i++) {
-    	  int numericVal = isNumeric(words[i]);
-    	  
-    	  if (numericVal>=0) {
-    		  schedule.add(numericVal);
-    	  } else {
-    		  System.out.println("String given when integer was expected."+words[i]);
-    		  return null;
-    	  }
-      }
-      
-      return schedule;
-	  
-  }
-  
-  
-  private static int isNumeric(String numberString) {
+	private static void deleteCoursePackage(Scanner scanner, DBClient client) {
+		System.out.println("Deleting a course package.");
+		// First, list all available course packages to select from
+		// Will be implemented
+		// client.listCoursePackages();
+
+		System.out.print("Enter the name of the course package to delete: ");
+		String packageName = scanner.nextLine();
+		List<String[]> selectedCourses;
+
+		client.deleteCoursePackage(packageName);
+	}
+
+	private static List<List<Integer>> getSchedule() {
+		System.out.println("Enter the schedule for course or done:");
+		System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
+		List<List<Integer>> schedules = new ArrayList<List<Integer>>();
+		Scanner keyboard = new Scanner(System.in);
+		String line = keyboard.nextLine();
+
+		while (!line.trim().equalsIgnoreCase("done")) {
+			// formatted line
+			List<Integer> schedule = parseSchedule(line);
+			if (schedule == null) {
+				System.out.println("The wrong format.");
+			} else {
+				System.out.println("Schedule is noted.");
+				schedules.add(schedule);
+			}
+
+			System.out.println("Enter the schedule for course or done:");
+			System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
+			line = keyboard.nextLine();
+		}
+
+		return schedules;
+	}
+
+	private static List<Integer> parseSchedule(String line) {
+		List<Integer> schedule = new ArrayList<Integer>();
+		String[] words = line.split(",");
+		Map<String, Integer> dayOfWeekMap = new HashMap<String, Integer>();
+
+		// Adding entries to the map
+		dayOfWeekMap.put("Monday", 1);
+		dayOfWeekMap.put("Tuesday", 2);
+		dayOfWeekMap.put("Wednesday", 3);
+		dayOfWeekMap.put("Thursday", 4);
+		dayOfWeekMap.put("Friday", 5);
+		dayOfWeekMap.put("Saturday", 6);
+		dayOfWeekMap.put("Sunday", 7);
+
+		if (words.length != 4) {
+			System.out.println("The wrong number of arguments.");
+			return null;
+		}
+
+		if (!dayOfWeekMap.containsKey(words[0])) {
+			System.out.println("The day of the week does not exist.");
+			return null;
+		}
+
+		schedule.add(dayOfWeekMap.get(words[0]));
+		for (int i = 1; i < 4; i++) {
+			int numericVal = isNumeric(words[i]);
+
+			if (numericVal >= 0) {
+				schedule.add(numericVal);
+			} else {
+				System.out.println("String given when integer was expected." + words[i]);
+				return null;
+			}
+		}
+
+		return schedule;
+
+	}
+
+	private static int isNumeric(String numberString) {
 		try {
 			return Integer.parseInt(numberString.trim());
-		}
-		catch(NumberFormatException ex) {
+		} catch (NumberFormatException ex) {
 			return -1;
 		}
 	}
 }
-
-
