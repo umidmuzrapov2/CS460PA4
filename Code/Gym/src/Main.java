@@ -1,8 +1,68 @@
+/*
+ * Name:  Umidjon Muzrapov, ...
+ * Assignment: Program 4
+ * Instructor: Prof. Lester I. McCann
+ * TAs: Zhenyu Qi and Danial Bazmandeh
+ * Due Date: 12/05/2023
+ * Version: 12/05/2023
+ * 
+ * -----------------------------------------
+ * 
+ * Description: This program is a database-deriven information management system 
+ * for fitness center. Specifically, it enables the user to add or delete a member,
+ * add or delete a course, and add,update, or delete a course package.
+ * 
+ * To compile and execute this program in lectura:
+ * 
+ * 1) Run 'source add_class_path' which is included to
+ * the solution. It adds the Oracle JDBC driver to your CLASSPATH environment variable.
+ * 2) Compile this java files:
+ * 	    javac DBClient.java
+ * 		javac Main java
+ * 3) Run the program:
+ * 		java Prog3.java <oracle username> <oracle password>
+ * 
+ * -----------------------------------------
+ * Operational Requirements: Java 16.
+ * 
+ * -----------------------------------------
+ * Known bugs or incomplete parts: None is known.
+ */
+
+
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.Scanner;
 
+/**
+ * Class name: Main
+ * Name: Umidjon Muzrapov, ...
+ * Dependencies: 
+ * 	java.sql.*
+ * 	java.util.*
+ * 	DBClient.java
+ * 
+ * Inherits from:
+ * 	None
+ * Interfaces:
+ * 	None
+ * ----------------------------------------
+ * 
+ * Purpose: 
+ * 	This class aims to execute the program, interact with the user, allow manage the gym,
+ *  answer 4 queries.
+ * ----------------------------------------
+ * 
+ * Constructor:
+ * 	The default constructor
+ * 
+ * Class methods:
+ * 	void main(String[] args): the beginning point of the program.
+ * 
+ * Instance methods:
+ * 	None
+ */	
 public class Main {
 
 	/**

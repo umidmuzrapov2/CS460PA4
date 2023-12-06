@@ -2,6 +2,49 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
+/**
+ * Class name: DBClient
+ * Name: Umidjon Muzrapov, ...
+ * Dependencies: 
+ * 	java.sql.*
+ * 	java.util.*
+ * 
+ * Inherits from:
+ * 	None
+ * Interfaces:
+ * 	None
+ * ----------------------------------------
+ * 
+ * Purpose: 
+ * 	This class aims to provide easy-to-use interface to communicate with the dbms.
+ * 	
+ * ----------------------------------------
+ * 
+ * Constructor:
+ * 	DBClient(String[] args)
+ * 		String[] -- username and password for db.
+ * 
+ * Class methods:
+ * 	void main(String[] args): the beginning point of the program.
+ * 
+ * Instance methods:
+ * 	addCourse​(java.lang.String className, int maxParticipant, int currentParticipant, java.sql.Date startDate, java.sql.Date endDate, java.util.List<java.util.List<java.lang.Integer>> schedules)
+ *  addCoursePackage​(java.lang.String packageName, java.util.List<java.lang.String[]> selectedCourses)
+ *  addMember​(java.lang.String firstName, java.lang.String lastName, java.lang.String phoneNumber)
+ *  addPackage​(java.lang.String packageName, int packagePrice)	
+	deleteCourse​(java.lang.String className, java.sql.Date startDate)
+	deleteCoursePackage​(java.lang.String packageName)
+ *  deleteMember​(int memberNumber)
+ *  deleteMember​(int memberNumber)
+ *  listCoursesInPackage​(java.lang.String packageName)
+ *  listOngoingCourses()
+ *  memberExists​(java.lang.String firstname, java.lang.String lastname)
+ *  printCourseSchedule​(java.lang.String firstname, java.lang.String lastname)
+ *  queryOne()
+ *  queryThree()
+ *  queryTwo​(int memberNumber)
+ *  	removeCourseFromPackage​(java.lang.String packageName, java.lang.String className, java.lang.String startDate)
+ */	
 public class DBClient {
 
 	// the field hold connection to db
