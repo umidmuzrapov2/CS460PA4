@@ -699,7 +699,7 @@ public class DBClient {
 		String query = String.format("SELECT c.className, c.startDate, s.day, s.hour, s.minute, s.duration"
 				+ " FROM umidmuzrapov.Member m, umidmuzrapov.Course c, umidmuzrapov.Enrollment e, umidmuzrapov.Schedule s"
 				+ " WHERE m.memberNumber=e.memberNumber AND m.memberNumber=%d"
-				+ " AND c.className=e.courseName AND c.startDate=e.startDate AND s.className=c.className AND s.startDate=c.startDate",
+				+ " AND c.className=e.courseName AND c.startDate=e.startDate AND s.className=c.className AND s.startDate=c.startDate ORDER BY s.day",
 				memberNumber);
 
 		Statement statement = dbconn.createStatement();
