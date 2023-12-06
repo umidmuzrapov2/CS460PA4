@@ -233,7 +233,19 @@ public class Main {
 			}
 			break;
 		case 3:
-			// Call method to handle query 3
+			List<String[]> queryThreeResults = client.queryThree();
+			if (queryThreeResults.size() == 0) {
+				System.out.println("\nNo trainers work during December.");
+			} else {
+				System.out.println("\nTrainers December schedule:");
+				for (String[] trainer : queryThreeResults) {
+					String formattedTime = String.format("%02d:%02d", Integer.parseInt(trainer[3]),
+							Integer.parseInt(trainer[4]));
+					System.out.println("Trainer number: " + trainer[0] + " | Trainer name: " + trainer[1]
+							+ " | Start time on " + trainer[2] + ": " + formattedTime + " | Duration: " + trainer[5]
+							+ " minutes | Total Hours in December: " + trainer[6]);
+				}
+			}
 			break;
 		case 4:
 			// Call method to handle custom query
@@ -477,22 +489,169 @@ public class Main {
 
 		System.out.print("Enter the name of the course package to update: ");
 		String packageName = scanner.nextLine();
-		List<String[]> selectedCourses = new ArrayList<>();
 
-		client.updateCoursePackage(packageName, selectedCourses);
+		System.out.print("Enter the price of the course package: ");
+		int packagePrice = scanner.nextInt();
+
+		List<String[]> allCourses = client.listOngoingCourses();
+		if (allCourses.isEmpty()) {
+			System.out.println("There are no ongoing courses to add to the package.");
+			return;
+		}
+
+		List<String[]> selectedCourses = new ArrayList<>();
+		System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
+		for (int i = 0; i < allCourses.size(); i++) {
+			System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
+		}
+
+		String input;
+		while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
+			boolean courseFound = false;
+			for (String[] course : allCourses) {
+				if (course[0].equalsIgnoreCase(input)) {
+					if (selectedCourses.contains(course)) {
+						System.out.println(input + " has already been added.");
+					} else {
+						selectedCourses.add(course);
+						System.out.println(input + " added.");
+					}
+					courseFound = true;
+					break;
+				}
+			}
+			if (!courseFound) {
+				System.out.println("Course not found. Please enter a valid course name.");
+			}
+			System.out.println("Enter next course or 'done':");
+		}
+
+		if (selectedCourses.isEmpty()) {
+			System.out.println("No courses were selected.");
+		} else {
+			if (!client.addPackage(packageName, packagePrice)) {
+				System.out.println("Failed to add package: " + packageName);
+				return;
+			}
+			boolean result = client.addCoursePackage(packageName, selectedCourses);
+			if (result) {
+				System.out.println("Course package added successfully.");
+			} else {
+				System.out.println("Failed to add course package.");
+			}
+		}
 	}
 
+	private static void updateCoursePackage(Scanner scanner, DBClient client) {
+		System.out.println("Select a course package to update:");
+		List<String> packages = client.listAllPackages();
+		for (int i = 0; i < packages.size(); i++) {
+			System.out.println((i + 1) + ". " + packages.get(i));
+		}
+
+		int choice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
+		if (choice < 1 || choice > packages.size()) {
+			System.out.println("Invalid choice. Operation cancelled.");
+			return;
+		}
+
+		String packageName = packages.get(choice - 1);
+		editSelectedPackage(scanner, client, packageName);
+	}
+
+	private static void editSelectedPackage(Scanner scanner, DBClient client, String packageName) {
+		System.out.println("Editing package: " + packageName);
+		System.out.println("1. Add a course");
+		System.out.println("2. Remove a course");
+
+		int choice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
+
+		switch (choice) {
+			case 1:
+				// Call method to add a course to this package
+				addCourseToPackage(scanner, client, packageName);
+				break;
+			case 2:
+				// Call method to remove a course from this package
+				removeCourseFromPackage(scanner, client, packageName);
+				break;
+			default:
+				System.out.println("Invalid option. Operation cancelled.");
+				break;
+		}
+	}
+
+	private static void addCourseToPackage(Scanner scanner, DBClient client, String packageName) {
+		System.out.println("Select a course to add to the package '" + packageName + "':");
+		List<String[]> allCourses = client.listOngoingCourses();
+		for (int i = 0; i < allCourses.size(); i++) {
+			String[] course = allCourses.get(i);
+			System.out.println((i + 1) + ". " + course[0] + " (Start Date: " + course[1] + ")");
+		}
+
+		System.out.print("Enter the number of the course to add: ");
+		int courseIndex = scanner.nextInt() - 1;
+		scanner.nextLine(); // Consume the newline left-over
+
+		if (courseIndex >= 0 && courseIndex < allCourses.size()) {
+			String[] selectedCourse = allCourses.get(courseIndex);
+			if (client.addCourseToPackage(packageName, selectedCourse[0], selectedCourse[1])) {
+				System.out.println("Course added successfully to the package.");
+			} else {
+				System.out.println("Failed to add course to the package.");
+			}
+		} else {
+			System.out.println("Invalid course selection.");
+		}
+	}
+
+	private static void removeCourseFromPackage(Scanner scanner, DBClient client, String packageName) {
+		System.out.println("Select a course to remove from the package '" + packageName + "':");
+		List<String[]> packageCourses = client.listCoursesInPackage(packageName);
+		for (int i = 0; i < packageCourses.size(); i++) {
+			String[] course = packageCourses.get(i);
+			System.out.println((i + 1) + ". " + course[0] + " (Start Date: " + course[1] + ")");
+		}
+
+		System.out.print("Enter the number of the course to remove: ");
+		int courseIndex = scanner.nextInt() - 1;
+		scanner.nextLine(); // Consume the newline left-over
+
+		if (courseIndex >= 0 && courseIndex < packageCourses.size()) {
+			String[] selectedCourse = packageCourses.get(courseIndex);
+			if (client.removeCourseFromPackage(packageName, selectedCourse[0], selectedCourse[1])) {
+				System.out.println("Course removed successfully from the package.");
+			} else {
+				System.out.println("Failed to remove course from the package.");
+			}
+		} else {
+			System.out.println("Invalid course selection.");
+		}
+	}
+
+
 	private static void deleteCoursePackage(Scanner scanner, DBClient client) {
-		System.out.println("Deleting a course package.");
-		// First, list all available course packages to select from
-		// Will be implemented
-		// client.listCoursePackages();
+		System.out.println("Select a course package to delete:");
+		List<String> packages = client.listAllPackages();
+		for (int i = 0; i < packages.size(); i++) {
+			System.out.println((i + 1) + ". " + packages.get(i));
+		}
 
-		System.out.print("Enter the name of the course package to delete: ");
-		String packageName = scanner.nextLine();
-		List<String[]> selectedCourses;
+		int choice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
+		if (choice < 1 || choice > packages.size()) {
+			System.out.println("Invalid choice. Operation cancelled.");
+			return;
+		}
 
-		client.deleteCoursePackage(packageName);
+		String packageName = packages.get(choice - 1);
+		if (client.deleteCoursePackage(packageName)) {
+			System.out.println("Package '" + packageName + "' deleted successfully.");
+		} else {
+			System.out.println("Failed to delete package.");
+		}
 	}
 
 	/**
