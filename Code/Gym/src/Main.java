@@ -59,6 +59,22 @@ public class Main {
     }
   }
 
+/**
+	 * Method handleRecordOperations
+	 * 
+	 * Purpose:
+	 * 	This method coordinates methods related to CRUD operations
+	 *  -- update, delete, and add.
+	 *  
+	 *  Pre-condition:
+	 *  	Connection to the dbms has been successfully established.
+	 *  Post-condition:
+	 *  	None
+	 *  
+	 * @param scanner input stream
+	 * @param client a client connected to dbms.
+	 */
+
   private static void handleRecordOperations(Scanner scanner, DBClient client) {
     System.out.println("\n--- Record Operations ---");
     System.out.println("1. Add/Delete Member");
@@ -84,6 +100,22 @@ public class Main {
     }
   }
 
+/**
+	 * Method handleMemberOperations
+	 * 
+	 * Purpose: The method coordinate the methods that handle CRUD on member:
+	 * 	addition, deletion.
+	 * 
+	 * Pre-condition:
+	 *  	Connection to the dbms has been successfully established.
+	 *  
+	 *  Post-condition:
+	 *  	None
+	 *  
+	 *  
+	 * @param scanner input stream
+	 * @param client a client connected to dbms.
+	 */
   private static void handleMemberOperations(Scanner scanner, DBClient client) {
     System.out.println("\n--- Member Operations ---");
     System.out.println("1. Add Member");
