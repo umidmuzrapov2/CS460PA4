@@ -97,9 +97,20 @@ public class Main {
 	}
 
 	/**
+	 * Method handleMemberOperations
 	 * 
-	 * @param scanner
-	 * @param client
+	 * Purpose: The method coordinate the methods that handle CRUD on member:
+	 * 	addition, deletion.
+	 * 
+	 * Pre-condition:
+	 *  	Connection to the dbms has been successfully established.
+	 *  
+	 *  Post-condition:
+	 *  	None
+	 *  
+	 *  
+	 * @param scanner input stream
+	 * @param client a client connected to dbms.
 	 */
 	private static void handleMemberOperations(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Member Operations ---");
