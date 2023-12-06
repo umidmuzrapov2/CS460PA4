@@ -665,7 +665,7 @@ public class DBClient {
 					"select e.courseName, c.startDate, c.endDate, s.day, s.hour, s.minute, s.duration "
 							+ "from umidmuzrapov.enrollment e join umidmuzrapov.course c on e.courseName = c.className and e.startDate = c.startDate "
 							+ "join umidmuzrapov.schedule s on c.className = s.className and c.startDate = s.startDate where e.memberNumber = %d "
-							+ "and c.startDate <= TO_DATE('30-01-2023', 'DD-MM-YYYY') and c.endDate >= TO_DATE('01-01-2023', 'DD-MM-YYYY')",
+							+ "and c.startDate <= TO_DATE('30-11-2023', 'DD-MM-YYYY') and c.endDate >= TO_DATE('01-11-2023', 'DD-MM-YYYY')",
 					memberNumber);
 
 			Statement statement = dbconn.createStatement();
