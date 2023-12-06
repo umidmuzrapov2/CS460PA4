@@ -673,6 +673,50 @@ public class DBClient {
 	}
 
 	/**
+	* Method isCourseInPackage
+	* 
+	* Purpose:
+	* 	This method checks whether a specific course, identified by its class name and
+	* 	start date, is already included in a given course package. It queries the
+	* 	database to determine if the specified course is part of the course package.
+	* 
+	* Pre-condition:
+	* 	A valid connection to the DBMS must be established. The parameters provided,
+	* 	packageName, className, and startDate, should be non-null and correspond to
+	* 	existing entries in the database.
+	* 
+	* Post-condition:
+	* 	Returns true if the specified course is found in the specified package; otherwise,
+	* 	returns false. In case of a SQL exception, an error message is printed, and false
+	* 	is returned, indicating the course is not in the package (or that the query could
+	* 	not be reliably executed).
+	* 
+	* @param packageName The name of the course package to check.
+	* @param className   The name of the class to check for in the package.
+	* @param startDate   The start date of the class, used to uniquely identify the course.
+	* @return A boolean value: true if the course is in the package, false otherwise.
+	*/
+	public boolean isCourseInPackage(String packageName, String className, String startDate) {
+		String query = "SELECT COUNT(*) FROM umidmuzrapov.CoursePackage WHERE packageName = ? AND className = ? AND startDate = ?";
+		
+		try (PreparedStatement preparedStatement = dbconn.prepareStatement(query)) {
+			preparedStatement.setString(1, packageName);
+			preparedStatement.setString(2, className);
+			preparedStatement.setDate(3, Date.valueOf(startDate));
+			
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getInt(1) > 0;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+
+	/**
 	 * Method listOngoingCourses
 	 * 
 	 * Purpose: Retrieves a list of all ongoing courses with their start and end

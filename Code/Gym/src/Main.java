@@ -1,5 +1,5 @@
 /*
- * Name:  Umidjon Muzrapov, ...
+ * Name:  Umidjon Muzrapov, Hamad Marhoon, Abdullah Alkhamis, Yahya Al Malallah
  * Assignment: Program 4
  * Instructor: Prof. Lester I. McCann
  * TAs: Zhenyu Qi and Danial Bazmandeh
@@ -37,7 +37,7 @@ import java.util.Scanner;
 
 /**
  * Class name: Main
- * Name: Umidjon Muzrapov, ...
+ * Name: Umidjon Muzrapov, Hamad Marhoon, Abdullah Alkhamis, Yahya Al Malallah
  * Dependencies: 
  * 	java.sql.*
  * 	java.util.*
@@ -478,6 +478,7 @@ public class Main {
 
 		System.out.print("Enter the price of the course package: ");
 		int packagePrice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
 
 		List<String[]> allCourses = client.listOngoingCourses();
 		if (allCourses.isEmpty()) {
@@ -486,30 +487,31 @@ public class Main {
 		}
 
 		List<String[]> selectedCourses = new ArrayList<>();
-		System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
+		System.out.println("Select courses to add to the package (Enter the number of the course, 'done' to finish):");
 		for (int i = 0; i < allCourses.size(); i++) {
-			System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
+			String[] course = allCourses.get(i);
+			System.out.println((i + 1) + ". " + course[0] + " - Start Date: " + course[1]);
 		}
 
 		String input;
 		while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
-			boolean courseFound = false;
-			for (String[] course : allCourses) {
-				if (course[0].equalsIgnoreCase(input)) {
-					if (selectedCourses.contains(course)) {
-						System.out.println(input + " has already been added.");
+			try {
+				int courseIndex = Integer.parseInt(input) - 1;
+				if (courseIndex >= 0 && courseIndex < allCourses.size()) {
+					String[] selectedCourse = allCourses.get(courseIndex);
+					if (!selectedCourses.contains(selectedCourse)) {
+						selectedCourses.add(selectedCourse);
+						System.out.println(selectedCourse[0] + " added.");
 					} else {
-						selectedCourses.add(course);
-						System.out.println(input + " added.");
+						System.out.println(selectedCourse[0] + " has already been added.");
 					}
-					courseFound = true;
-					break;
+				} else {
+					System.out.println("Invalid course number. Please enter a valid number.");
 				}
+			} catch (NumberFormatException e) {
+				System.out.println("Invalid input. Please enter a valid number.");
 			}
-			if (!courseFound) {
-				System.out.println("Course not found. Please enter a valid course name.");
-			}
-			System.out.println("Enter next course or 'done':");
+			System.out.println("Enter next course number or 'done':");
 		}
 
 		if (selectedCourses.isEmpty()) {
@@ -527,6 +529,7 @@ public class Main {
 			}
 		}
 	}
+
 
 	/**
 	 * Method updateCoursePackage
@@ -542,67 +545,45 @@ public class Main {
 	 * @param client  a client connected to dbms.
 	 */
 	private static void updateCoursePackage(Scanner scanner, DBClient client) {
-		System.out.println("Updating a course package.");
-		// First, list all available course packages to select from
-		// Will be implemented
-		// client.listCoursePackages();
+		System.out.println("Select a course package to update:");
+		List<String> packages = client.listAllPackages();
+		for (int i = 0; i < packages.size(); i++) {
+			System.out.println((i + 1) + ". " + packages.get(i));
+		}
 
-		System.out.print("Enter the name of the course package to update: ");
-		String packageName = scanner.nextLine();
-
-		System.out.print("Enter the price of the course package: ");
-		int packagePrice = scanner.nextInt();
-
-		List<String[]> allCourses = client.listOngoingCourses();
-		if (allCourses.isEmpty()) {
-			System.out.println("There are no ongoing courses to add to the package.");
+		int choice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
+		if (choice < 1 || choice > packages.size()) {
+			System.out.println("Invalid choice. Operation cancelled.");
 			return;
 		}
 
-		List<String[]> selectedCourses = new ArrayList<>();
-		System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
-		for (int i = 0; i < allCourses.size(); i++) {
-			System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
-		}
-
-		String input;
-		while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
-			boolean courseFound = false;
-			for (String[] course : allCourses) {
-				if (course[0].equalsIgnoreCase(input)) {
-					if (selectedCourses.contains(course)) {
-						System.out.println(input + " has already been added.");
-					} else {
-						selectedCourses.add(course);
-						System.out.println(input + " added.");
-					}
-					courseFound = true;
-					break;
-				}
-			}
-			if (!courseFound) {
-				System.out.println("Course not found. Please enter a valid course name.");
-			}
-			System.out.println("Enter next course or 'done':");
-		}
-
-		if (selectedCourses.isEmpty()) {
-			System.out.println("No courses were selected.");
-		} else {
-			if (!client.addPackage(packageName, packagePrice)) {
-				System.out.println("Failed to add package: " + packageName);
-				return;
-			}
-			boolean result = client.addCoursePackage(packageName, selectedCourses);
-			if (result) {
-				System.out.println("Course package added successfully.");
-			} else {
-				System.out.println("Failed to add course package.");
-			}
-		}
+		String packageName = packages.get(choice - 1);
+		editSelectedPackage(scanner, client, packageName);
 	}
 
-
+	/**
+	* Method editSelectedPackage
+	* 
+	* Purpose:
+	* 	This method provides options to edit a selected course package. It allows
+	*  the admin to add or remove courses from the specified package, thereby
+	*  updating its composition. The method presents a menu for these operations
+	*  and delegates the task to the respective methods based on the admin's choice.
+	*
+	* Pre-condition:
+	* 	Connection to the DBMS has been successfully established. The specified
+	*  package name must correspond to an existing course package.
+	*
+	* Post-condition:
+	* 	The selected course package is modified based on the admin's choices.
+	*  This could involve adding new courses to the package or removing existing
+	*  ones. The state of the package in the database is updated accordingly.
+	*
+	* @param scanner An instance of Scanner for capturing user input.
+	* @param client  An instance of DBClient, representing a client connected to the DBMS.
+	* @param packageName The name of the course package to be edited.
+	*/
 	private static void editSelectedPackage(Scanner scanner, DBClient client, String packageName) {
 		System.out.println("Editing package: " + packageName);
 		System.out.println("1. Add a course");
@@ -626,6 +607,29 @@ public class Main {
 		}
 	}
 
+	/**
+	* Method addCourseToPackage
+	* 
+	* Purpose:
+	* 	This method allows the admin to add a new course to an existing course package.
+	* 	It presents a list of all ongoing courses and prompts the admin to select one
+	* 	to add to the specified package. The method includes a check to prevent
+	* 	duplication by verifying if the selected course is already part of the package.
+	* 
+	* Pre-condition:
+	* 	Connection to the DBMS must be successfully established. The method assumes
+	* 	that the package name provided corresponds to an existing course package.
+	* 	Also, there should be ongoing courses available for selection.
+	* 
+	* Post-condition:
+	* 	If the selected course is not already in the package, it is added, and its
+	* 	details are updated in the database. If the course is already in the package,
+	* 	the method informs the user and no addition is made.
+	* 
+	* @param scanner An instance of Scanner to capture user input.
+	* @param client  An instance of DBClient, representing a client connected to the DBMS.
+	* @param packageName The name of the course package to which the course is being added.
+	*/
 	private static void addCourseToPackage(Scanner scanner, DBClient client, String packageName) {
 		System.out.println("Select a course to add to the package '" + packageName + "':");
 		List<String[]> allCourses = client.listOngoingCourses();
@@ -640,6 +644,14 @@ public class Main {
 
 		if (courseIndex >= 0 && courseIndex < allCourses.size()) {
 			String[] selectedCourse = allCourses.get(courseIndex);
+			
+			// Check if the course is already in the package
+			if (client.isCourseInPackage(packageName, selectedCourse[0], selectedCourse[1])) {
+				System.out.println("This course is already in the package.");
+				return;
+			}
+
+			// Proceed to add course
 			if (client.addCourseToPackage(packageName, selectedCourse[0], selectedCourse[1])) {
 				System.out.println("Course added successfully to the package.");
 			} else {
@@ -650,6 +662,29 @@ public class Main {
 		}
 	}
 
+	/**
+	* Method removeCourseFromPackage
+	* 
+	* Purpose:
+	* 	This method facilitates the removal of a specific course from an existing course package.
+	* 	The admin is presented with a list of all courses currently in the selected package and
+	* 	can choose one to be removed. This method is responsible for handling the user's
+	* 	selection and initiating the removal process of the selected course from the package.
+	* 
+	* Pre-condition:
+	* 	Connection to the DBMS must be active and stable. The packageName provided should
+	* 	correspond to an existing course package in the database. The method assumes that
+	* 	the package contains at least one course that can be removed.
+	* 
+	* Post-condition:
+	* 	If the user's selection is valid, the specified course is removed from the course package.
+	* 	The database is updated to reflect this change. If the course selection is invalid or
+	* 	the removal process encounters an issue, an appropriate message is displayed.
+	* 
+	* @param scanner An instance of Scanner to capture user input.
+	* @param client  An instance of DBClient, representing a client connected to the DBMS.
+	* @param packageName The name of the course package from which a course is being removed.
+	*/
 	private static void removeCourseFromPackage(Scanner scanner, DBClient client, String packageName) {
 		System.out.println("Select a course to remove from the package '" + packageName + "':");
 		List<String[]> packageCourses = client.listCoursesInPackage(packageName);
@@ -674,7 +709,29 @@ public class Main {
 		}
 	}
 
-
+	/**
+	* Method deleteCoursePackage
+	* 
+	* Purpose:
+	* 	This method allows an admin to delete an entire course package from the system. 
+	* 	It first displays a list of all existing course packages and then prompts the admin 
+	* 	to select one for deletion. Upon selection, the method proceeds to delete the chosen 
+	* 	package along with any associated course entries in the package from the database.
+	* 
+	* Pre-condition:
+	* 	Connection to the DBMS must be established and functional. The list of packages
+	* 	presented to the admin is assumed to be current and accurate. The admin is expected
+	* 	to make a valid selection from the list.
+	* 
+	* Post-condition:
+	* 	If a valid package is selected, it is removed from the database, including all
+	* 	associations with courses. If the selection is invalid or the deletion process
+	* 	encounters an error, an appropriate error message is displayed, and no changes
+	* 	are made to the database.
+	* 
+	* @param scanner An instance of Scanner to capture user input.
+	* @param client  An instance of DBClient, representing a client connected to the DBMS.
+	*/
 	private static void deleteCoursePackage(Scanner scanner, DBClient client) {
 		System.out.println("Select a course package to delete:");
 		List<String> packages = client.listAllPackages();
