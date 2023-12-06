@@ -1054,17 +1054,17 @@ public class DBClient {
 	}
 
 	/**
-	 * Method calculateTotalHours 
-	 *  
+	 * Method calculateTotalHours
+	 * 
 	 * Purpose: Calculates total trainer hours for the month
 	 *
 	 * Pre-condition: Valid schedule data passed in
 	 * 
 	 * Post-condition: Trainer total hours map returned
-	 *  
-	 * @param scheduleData List of trainer schedule entries 
+	 * 
+	 * @param scheduleData List of trainer schedule entries
 	 * @return Map of trainer IDs to total hours
-	*/ 
+	 */
 	private Map<String, Integer> calculateTotalHours(List<String[]> scheduleData) {
 		Map<Integer, Integer> dayCounts = countDaysInDecember();
 		Map<String, Integer> trainerTotalHours = new HashMap<>();
@@ -1085,14 +1085,14 @@ public class DBClient {
 	/**
 	 * Method countDaysInDecember
 	 *
-	 * Purpose: Counts number of each weekday in December  
+	 * Purpose: Counts number of each weekday in December
 	 * 
 	 * Pre-condition: None
 	 *
 	 * Post-condition: Weekday count map returned
 	 * 
 	 * @return Map of weekdays to occurrences in December
-	*/
+	 */
 	private Map<Integer, Integer> countDaysInDecember() {
 		Map<Integer, Integer> dayCounts = new HashMap<>();
 		Calendar cal = Calendar.getInstance();
@@ -1226,17 +1226,17 @@ public class DBClient {
 	}
 
 	/**
-	 * Method intToDay  
+	 * Method intToDay
 	 *
 	 * Purpose: Converts integer day of week to string name
 	 *
 	 * Pre-condition: Valid day of week integer
 	 * 
-	 * Post-condition: String day name returned  
+	 * Post-condition: String day name returned
 	 * 
-	 * @param day Integer day of week 
+	 * @param day Integer day of week
 	 * @return String name for day
-	*/
+	 */
 	private String intToDay(int day) {
 		switch (day) {
 		case 1:
