@@ -474,7 +474,7 @@ public class DBClient {
 
 	public boolean addPackage(String packageName, int packagePrice) {
 		String insertPackageQuery = "INSERT INTO umidmuzrapov.Package (packageName, cost) VALUES (?, ?)";
-		
+
 		try (PreparedStatement preparedStatement = dbconn.prepareStatement(insertPackageQuery)) {
 			preparedStatement.setString(1, packageName);
 			preparedStatement.setInt(2, packagePrice); // Set the package price in the prepared statement
@@ -487,63 +487,62 @@ public class DBClient {
 	}
 
 	public boolean addCoursePackage(String packageName, List<String[]> selectedCourses) {
-    String checkPackageQuery = "SELECT COUNT(*) FROM umidmuzrapov.Package WHERE packageName = ?";
-    String checkCourseQuery = "SELECT COUNT(*) FROM umidmuzrapov.Course WHERE className = ? AND startDate = ?";
-    String insertQuery = "INSERT INTO umidmuzrapov.CoursePackage (packageName, className, startDate) VALUES (?, ?, ?)";
-    
-    try {
-        dbconn.setAutoCommit(false);
+		String checkPackageQuery = "SELECT COUNT(*) FROM umidmuzrapov.Package WHERE packageName = ?";
+		String checkCourseQuery = "SELECT COUNT(*) FROM umidmuzrapov.Course WHERE className = ? AND startDate = ?";
+		String insertQuery = "INSERT INTO umidmuzrapov.CoursePackage (packageName, className, startDate) VALUES (?, ?, ?)";
 
-        // Check if the package exists
-        try (PreparedStatement checkPackageStmt = dbconn.prepareStatement(checkPackageQuery)) {
-            checkPackageStmt.setString(1, packageName);
-            ResultSet rs = checkPackageStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) == 0) {
-                throw new SQLException("Package not found: " + packageName);
-            }
-        }
+		try {
+			dbconn.setAutoCommit(false);
 
-        // Prepare the insert statement
-        try (PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery)) {
-            for (String[] course : selectedCourses) {
-                // Check if each course exists
-                try (PreparedStatement checkCourseStmt = dbconn.prepareStatement(checkCourseQuery)) {
-                    checkCourseStmt.setString(1, course[0]);
-                    checkCourseStmt.setDate(2, Date.valueOf(course[1]));
-                    ResultSet rs = checkCourseStmt.executeQuery();
-                    if (rs.next() && rs.getInt(1) == 0) {
-                        throw new SQLException("Course not found: " + course[0] + ", " + course[1]);
-                    }
-                }
+			// Check if the package exists
+			try (PreparedStatement checkPackageStmt = dbconn.prepareStatement(checkPackageQuery)) {
+				checkPackageStmt.setString(1, packageName);
+				ResultSet rs = checkPackageStmt.executeQuery();
+				if (rs.next() && rs.getInt(1) == 0) {
+					throw new SQLException("Package not found: " + packageName);
+				}
+			}
 
-                // Add to batch
-                preparedStatement.setString(1, packageName);
-                preparedStatement.setString(2, course[0]);
-                preparedStatement.setDate(3, Date.valueOf(course[1]));
-                preparedStatement.addBatch();
-            }
-            preparedStatement.executeBatch();
-        }
+			// Prepare the insert statement
+			try (PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery)) {
+				for (String[] course : selectedCourses) {
+					// Check if each course exists
+					try (PreparedStatement checkCourseStmt = dbconn.prepareStatement(checkCourseQuery)) {
+						checkCourseStmt.setString(1, course[0]);
+						checkCourseStmt.setDate(2, Date.valueOf(course[1]));
+						ResultSet rs = checkCourseStmt.executeQuery();
+						if (rs.next() && rs.getInt(1) == 0) {
+							throw new SQLException("Course not found: " + course[0] + ", " + course[1]);
+						}
+					}
 
-        dbconn.commit();
-        return true;
-    } catch (SQLException e) {
-        e.printStackTrace();
-        try {
-            dbconn.rollback();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    } finally {
-        try {
-            dbconn.setAutoCommit(true);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-}
+					// Add to batch
+					preparedStatement.setString(1, packageName);
+					preparedStatement.setString(2, course[0]);
+					preparedStatement.setDate(3, Date.valueOf(course[1]));
+					preparedStatement.addBatch();
+				}
+				preparedStatement.executeBatch();
+			}
 
+			dbconn.commit();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public boolean updateCoursePackage(String packageName, List<String[]> updatedCourses) {
 		try {
@@ -715,9 +714,8 @@ public class DBClient {
 				int minute = resultSet.getInt("minute");
 				int duration = resultSet.getInt("duration");
 
-				novemeberClassSchedule
-						.add(new String[] { courseName, startDate.toString(), endDate.toString(), intToDay(day),
-								Integer.toString(hour), Integer.toString(minute), Integer.toString(duration) });
+				novemeberClassSchedule.add(new String[] { courseName, startDate.toString(), endDate.toString(),
+						intToDay(day), Integer.toString(hour), Integer.toString(minute), Integer.toString(duration) });
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

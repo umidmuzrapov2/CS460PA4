@@ -7,7 +7,7 @@ Primary Key trainerNumber
 Course (className, startDate, maxParticipant, currentParticipant, endDate, trainerNumber)
 Primary Key: className, startDate; Foreign Key: trainerNumber
 
-Schedule (className, startDate day, hour, minute, duration)
+Schedule (className, startDate, day, hour, minute, duration)
 Primary Key: className, startDate, day; Foreign Key: className, startDate
 
 Member (memberNumber, fname, lname, phoneNumber, levelId)

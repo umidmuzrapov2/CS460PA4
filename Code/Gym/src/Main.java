@@ -59,17 +59,14 @@ public class Main {
 	/**
 	 * Method handleRecordOperations
 	 * 
-	 * Purpose:
-	 * 	This method coordinates methods related to CRUD operations
-	 *  -- update, delete, and add.
-	 *  
-	 *  Pre-condition:
-	 *  	Connection to the dbms has been successfully established.
-	 *  Post-condition:
-	 *  	None
-	 *  
+	 * Purpose: This method coordinates methods related to CRUD operations --
+	 * update, delete, and add.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * Post-condition: None
+	 * 
 	 * @param scanner input stream
-	 * @param client a client connected to dbms.
+	 * @param client  a client connected to dbms.
 	 */
 	private static void handleRecordOperations(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Record Operations ---");
@@ -100,17 +97,15 @@ public class Main {
 	 * Method handleMemberOperations
 	 * 
 	 * Purpose: The method coordinate the methods that handle CRUD on member:
-	 * 	addition, deletion.
+	 * addition, deletion.
 	 * 
-	 * Pre-condition:
-	 *  	Connection to the dbms has been successfully established.
-	 *  
-	 *  Post-condition:
-	 *  	None
-	 *  
-	 *  
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: None
+	 * 
+	 * 
 	 * @param scanner input stream
-	 * @param client a client connected to dbms.
+	 * @param client  a client connected to dbms.
 	 */
 	private static void handleMemberOperations(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Member Operations ---");
@@ -133,6 +128,18 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Method addMember
+	 * 
+	 * Purpose: This method adds a member to a relation Member.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: A new row is added.
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void addMember(Scanner scanner, DBClient client) {
 		System.out.println("Adding a new member.");
 		System.out.print("Enter member's first name: ");
@@ -152,14 +159,41 @@ public class Main {
 		// client.listAndSelectCoursePackage();
 	}
 
+	/**
+	 * Method deleteMember
+	 * 
+	 * Purpose: This member deletes a member from a relation Member.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: A tuple is removed.
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void deleteMember(Scanner scanner, DBClient client) {
 		System.out.println("Deleting a member.");
 		System.out.print("Enter member's number: ");
+		// get member ID whom you want to remove
 		int memberNumber = scanner.nextInt();
+		// call a method to remove the user
 		String result = client.deleteMember(memberNumber);
 		System.out.println(result);
 	}
 
+	/**
+	 * Method habdleQueries
+	 * 
+	 * Purpose: This method coordinates methods that handle queries.
+	 * 
+	 *
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: None
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void handleQueries(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Queries ---");
 		System.out.println("1. List members with negative balance");
@@ -193,9 +227,8 @@ public class Main {
 			} else {
 				System.out.println("\nMember's November schedule:");
 				for (String[] schedule : queryTwoResult) {
-					System.out.println("Course: " + schedule[0] + " | Day: "
-							+ schedule[3] + " | Time: " + schedule[4] + ":"
-							+ schedule[5] + " | Duration: " + schedule[6] + " minutes");
+					System.out.println("Course: " + schedule[0] + " | Day: " + schedule[3] + " | Time: " + schedule[4]
+							+ ":" + schedule[5] + " | Duration: " + schedule[6] + " minutes");
 				}
 			}
 			break;
@@ -205,9 +238,9 @@ public class Main {
 		case 4:
 			// Call method to handle custom query
 			System.out.println("Enter the firsname");
-    		String fname= scanner.nextLine();
-    		System.out.println("Enter the lastname");
-    		String lname= scanner.nextLine();
+			String fname = scanner.nextLine();
+			System.out.println("Enter the lastname");
+			String lname = scanner.nextLine();
 			try {
 				client.printCourseSchedule(fname, lname);
 			} catch (SQLException e) {
@@ -220,6 +253,19 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Method handleCourseOperations
+	 * 
+	 * Purpose: This method coordinate methods that modify course -- addition and
+	 * deletion.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: None
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void handleCourseOperations(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Course Operations ---");
 		System.out.println("1. Add Course");
@@ -241,6 +287,19 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Method addCourse
+	 * 
+	 * Purpose: This method a tuple course to Course relation. It also adds
+	 * schedules for the course, and assigns the trainer.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: a new tuple and schedule tuples are inserted.
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void addCourse(Scanner scanner, DBClient client) {
 		System.out.println("Adding a new course.");
 		System.out.print("Enter course name: ");
@@ -257,12 +316,24 @@ public class Main {
 		Date startDate = Date.valueOf(scanner.nextLine());
 		System.out.print("Enter course end date (yyyy-mm-dd): ");
 		Date endDate = Date.valueOf(scanner.nextLine());
-		List<List<Integer>> schedules = getSchedule();
+		List<List<Integer>> schedules = getCourseSchedule();
 
 		// Call DBClient method to add the course
 		client.addCourse(courseName, maxParticipants, curParticipants, startDate, endDate, schedules);
 	}
 
+	/**
+	 * Method deleteCourse
+	 * 
+	 * Purpose: This methods deletes a course from Course relation.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: a tuple is removed.
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void deleteCourse(Scanner scanner, DBClient client) {
 		System.out.println("Deleting a course.");
 		System.out.print("Enter course name: ");
@@ -273,6 +344,21 @@ public class Main {
 		client.deleteCourse(courseName, startDate);
 	}
 
+	/**
+	 * Method handleCoursePackageOperations
+	 * 
+	 * 
+	 * Purpose: This method handle operations that handle coursePackages -- adding a
+	 * course package, update and deletion.
+	 * 
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: None
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void handleCoursePackageOperations(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Course Package Operations ---");
 		System.out.println("1. Add Course Package");
@@ -298,66 +384,91 @@ public class Main {
 		}
 	}
 
-	/*
-  When adding a course package, the system lists all available courses that have not yet ended, 
-  allowing the admin to select which to include. */
-  private static void addCoursePackage(Scanner scanner, DBClient client) {
-    System.out.println("Adding a new course package.");
-    System.out.print("Enter the name of the course package to add: ");
-    String packageName = scanner.nextLine();
+	/**
+	 * Method addCoursePackage
+	 * 
+	 * Purpose:
+	 * 	This method add a tuple that represents 'Every course is a part of zero or more relationships'.	
+	 * 	When adding a course package, the system lists all available courses that
+	 * 	have not yet ended, allowing the admin to select which to include.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: a tuple is added.
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
+	private static void addCoursePackage(Scanner scanner, DBClient client) {
+		System.out.println("Adding a new course package.");
+		System.out.print("Enter the name of the course package to add: ");
+		String packageName = scanner.nextLine();
 
-    System.out.print("Enter the price of the course package: ");
-    int packagePrice = scanner.nextInt();
+		System.out.print("Enter the price of the course package: ");
+		int packagePrice = scanner.nextInt();
 
-    List<String[]> allCourses = client.listOngoingCourses();
-    if (allCourses.isEmpty()) {
-        System.out.println("There are no ongoing courses to add to the package.");
-        return;
-    }
+		List<String[]> allCourses = client.listOngoingCourses();
+		if (allCourses.isEmpty()) {
+			System.out.println("There are no ongoing courses to add to the package.");
+			return;
+		}
 
-    List<String[]> selectedCourses = new ArrayList<>();
-    System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
-    for (int i = 0; i < allCourses.size(); i++) {
-        System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
-    }
+		List<String[]> selectedCourses = new ArrayList<>();
+		System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
+		for (int i = 0; i < allCourses.size(); i++) {
+			System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
+		}
 
-    String input;
-    while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
-        boolean courseFound = false;
-        for (String[] course : allCourses) {
-            if (course[0].equalsIgnoreCase(input)) {
-                if (selectedCourses.contains(course)) {
-                    System.out.println(input + " has already been added.");
-                } else {
-                    selectedCourses.add(course);
-                    System.out.println(input + " added.");
-                }
-                courseFound = true;
-                break;
-            }
-        }
-        if (!courseFound) {
-            System.out.println("Course not found. Please enter a valid course name.");
-        }
-        System.out.println("Enter next course or 'done':");
-    }
+		String input;
+		while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
+			boolean courseFound = false;
+			for (String[] course : allCourses) {
+				if (course[0].equalsIgnoreCase(input)) {
+					if (selectedCourses.contains(course)) {
+						System.out.println(input + " has already been added.");
+					} else {
+						selectedCourses.add(course);
+						System.out.println(input + " added.");
+					}
+					courseFound = true;
+					break;
+				}
+			}
+			if (!courseFound) {
+				System.out.println("Course not found. Please enter a valid course name.");
+			}
+			System.out.println("Enter next course or 'done':");
+		}
 
-    if (selectedCourses.isEmpty()) {
-        System.out.println("No courses were selected.");
-    } else {
-        if (!client.addPackage(packageName, packagePrice)) {
-          System.out.println("Failed to add package: " + packageName);
-          return;
-        }
-        boolean result = client.addCoursePackage(packageName, selectedCourses);
-        if (result) {
-            System.out.println("Course package added successfully.");
-        } else {
-            System.out.println("Failed to add course package.");
-        }
-    }
-}
+		if (selectedCourses.isEmpty()) {
+			System.out.println("No courses were selected.");
+		} else {
+			if (!client.addPackage(packageName, packagePrice)) {
+				System.out.println("Failed to add package: " + packageName);
+				return;
+			}
+			boolean result = client.addCoursePackage(packageName, selectedCourses);
+			if (result) {
+				System.out.println("Course package added successfully.");
+			} else {
+				System.out.println("Failed to add course package.");
+			}
+		}
+	}
 
+	/**
+	 * Method updateCoursePackage
+	 * 
+	 * Purpose:
+	 * 	This method updates a tuple that represents 'Every course is a part of zero or more relationships'.	
+	 * 
+     * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: a tuple is update.
+	 * 
+	 * @param scanner input stream
+	 * @param client  a client connected to dbms.
+	 */
 	private static void updateCoursePackage(Scanner scanner, DBClient client) {
 		System.out.println("Updating a course package.");
 		// First, list all available course packages to select from
@@ -384,7 +495,21 @@ public class Main {
 		client.deleteCoursePackage(packageName);
 	}
 
-	private static List<List<Integer>> getSchedule() {
+	/**
+	 * Method getCoruseSchedule
+	 * 
+	 * Purpose:
+	 * 	This methods gets a set of schedule(s) for the course.
+	 * 	Expected format Day of the week, hour, minute, duration.
+	 * 
+	 * Pre-condition:
+	 * 	None
+	 * Post-condition:
+	 * 	At least one schedule is given.
+	 * 
+	 * @return a list of schedule which is represented by a list of integers.
+	 */
+	private static List<List<Integer>> getCourseSchedule() {
 		System.out.println("Enter the schedule for course or done:");
 		System.out.println("The format is 'Day, hour, minute, duration'.\ne.g.Monday, 15, 30, 50.");
 		List<List<Integer>> schedules = new ArrayList<List<Integer>>();
@@ -409,6 +534,22 @@ public class Main {
 		return schedules;
 	}
 
+	/**
+	 * Method parseSchedule
+	 * 
+	 * Purpose:
+	 * 	This method appropriately parse/formats the user input for schedule, so
+	 * 	it can be used for schedule insertion.
+	 * 
+	 * Pre-condition:
+	 * 	Schedule elements are separated by a comma
+	 * 
+	 * Post-condition:
+	 * 	None
+	 * 
+	 * @param line string that represent a schedule for the course
+	 * @return a list of integers that stand for day of the week, hour, minute, duration
+	 */
 	private static List<Integer> parseSchedule(String line) {
 		List<Integer> schedule = new ArrayList<Integer>();
 		String[] words = line.split(",");
@@ -449,6 +590,22 @@ public class Main {
 
 	}
 
+	/**
+	 * Method isNumeric
+	 * 
+	 * Purpose:
+	 * 	The method checks if the number is numeric and returns its int value if so.
+	 * 	Otherwise, it returns -1.
+	 * 
+	 * Pre-condition:
+	 * 	Input is positive.
+	 * 
+	 * Post-condition:
+	 * 	None
+	 * 
+	 * @param numberString a string whose int value is sought.
+	 * @return int value of numberString. -1 if the input is not a number.
+	 */
 	private static int isNumeric(String numberString) {
 		try {
 			return Integer.parseInt(numberString.trim());
