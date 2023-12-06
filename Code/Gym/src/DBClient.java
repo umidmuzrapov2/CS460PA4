@@ -474,7 +474,7 @@ public class DBClient {
 
 	public boolean addPackage(String packageName, int packagePrice) {
 		String insertPackageQuery = "INSERT INTO umidmuzrapov.Package (packageName, cost) VALUES (?, ?)";
-		
+
 		try (PreparedStatement preparedStatement = dbconn.prepareStatement(insertPackageQuery)) {
 			preparedStatement.setString(1, packageName);
 			preparedStatement.setInt(2, packagePrice); // Set the package price in the prepared statement
@@ -487,63 +487,62 @@ public class DBClient {
 	}
 
 	public boolean addCoursePackage(String packageName, List<String[]> selectedCourses) {
-    String checkPackageQuery = "SELECT COUNT(*) FROM umidmuzrapov.Package WHERE packageName = ?";
-    String checkCourseQuery = "SELECT COUNT(*) FROM umidmuzrapov.Course WHERE className = ? AND startDate = ?";
-    String insertQuery = "INSERT INTO umidmuzrapov.CoursePackage (packageName, className, startDate) VALUES (?, ?, ?)";
-    
-    try {
-        dbconn.setAutoCommit(false);
+		String checkPackageQuery = "SELECT COUNT(*) FROM umidmuzrapov.Package WHERE packageName = ?";
+		String checkCourseQuery = "SELECT COUNT(*) FROM umidmuzrapov.Course WHERE className = ? AND startDate = ?";
+		String insertQuery = "INSERT INTO umidmuzrapov.CoursePackage (packageName, className, startDate) VALUES (?, ?, ?)";
 
-        // Check if the package exists
-        try (PreparedStatement checkPackageStmt = dbconn.prepareStatement(checkPackageQuery)) {
-            checkPackageStmt.setString(1, packageName);
-            ResultSet rs = checkPackageStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) == 0) {
-                throw new SQLException("Package not found: " + packageName);
-            }
-        }
+		try {
+			dbconn.setAutoCommit(false);
 
-        // Prepare the insert statement
-        try (PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery)) {
-            for (String[] course : selectedCourses) {
-                // Check if each course exists
-                try (PreparedStatement checkCourseStmt = dbconn.prepareStatement(checkCourseQuery)) {
-                    checkCourseStmt.setString(1, course[0]);
-                    checkCourseStmt.setDate(2, Date.valueOf(course[1]));
-                    ResultSet rs = checkCourseStmt.executeQuery();
-                    if (rs.next() && rs.getInt(1) == 0) {
-                        throw new SQLException("Course not found: " + course[0] + ", " + course[1]);
-                    }
-                }
+			// Check if the package exists
+			try (PreparedStatement checkPackageStmt = dbconn.prepareStatement(checkPackageQuery)) {
+				checkPackageStmt.setString(1, packageName);
+				ResultSet rs = checkPackageStmt.executeQuery();
+				if (rs.next() && rs.getInt(1) == 0) {
+					throw new SQLException("Package not found: " + packageName);
+				}
+			}
 
-                // Add to batch
-                preparedStatement.setString(1, packageName);
-                preparedStatement.setString(2, course[0]);
-                preparedStatement.setDate(3, Date.valueOf(course[1]));
-                preparedStatement.addBatch();
-            }
-            preparedStatement.executeBatch();
-        }
+			// Prepare the insert statement
+			try (PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery)) {
+				for (String[] course : selectedCourses) {
+					// Check if each course exists
+					try (PreparedStatement checkCourseStmt = dbconn.prepareStatement(checkCourseQuery)) {
+						checkCourseStmt.setString(1, course[0]);
+						checkCourseStmt.setDate(2, Date.valueOf(course[1]));
+						ResultSet rs = checkCourseStmt.executeQuery();
+						if (rs.next() && rs.getInt(1) == 0) {
+							throw new SQLException("Course not found: " + course[0] + ", " + course[1]);
+						}
+					}
 
-        dbconn.commit();
-        return true;
-    } catch (SQLException e) {
-        e.printStackTrace();
-        try {
-            dbconn.rollback();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    } finally {
-        try {
-            dbconn.setAutoCommit(true);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-}
+					// Add to batch
+					preparedStatement.setString(1, packageName);
+					preparedStatement.setString(2, course[0]);
+					preparedStatement.setDate(3, Date.valueOf(course[1]));
+					preparedStatement.addBatch();
+				}
+				preparedStatement.executeBatch();
+			}
 
+			dbconn.commit();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public boolean updateCoursePackage(String packageName, List<String[]> updatedCourses) {
 		try {
@@ -618,40 +617,40 @@ public class DBClient {
 
 	public boolean deleteCoursePackage(String packageName) {
 		String deleteCoursePackageQuery = "DELETE FROM umidmuzrapov.CoursePackage WHERE packageName = ?";
-    String deletePackageQuery = "DELETE FROM umidmuzrapov.Package WHERE packageName = ?";
+		String deletePackageQuery = "DELETE FROM umidmuzrapov.Package WHERE packageName = ?";
 
-    try {
-        dbconn.setAutoCommit(false);
+		try {
+			dbconn.setAutoCommit(false);
 
-        // Delete course packages
-        try (PreparedStatement preparedStatement = dbconn.prepareStatement(deleteCoursePackageQuery)) {
-            preparedStatement.setString(1, packageName);
-            preparedStatement.executeUpdate();
-        }
+			// Delete course packages
+			try (PreparedStatement preparedStatement = dbconn.prepareStatement(deleteCoursePackageQuery)) {
+				preparedStatement.setString(1, packageName);
+				preparedStatement.executeUpdate();
+			}
 
-        // Delete package
-        try (PreparedStatement preparedStatement = dbconn.prepareStatement(deletePackageQuery)) {
-            preparedStatement.setString(1, packageName);
-            preparedStatement.executeUpdate();
-        }
+			// Delete package
+			try (PreparedStatement preparedStatement = dbconn.prepareStatement(deletePackageQuery)) {
+				preparedStatement.setString(1, packageName);
+				preparedStatement.executeUpdate();
+			}
 
-        dbconn.commit();
-        return true;
-    } catch (SQLException e) {
-        e.printStackTrace();
-        try {
-            dbconn.rollback();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    } finally {
-        try {
-            dbconn.setAutoCommit(true);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+			dbconn.commit();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				dbconn.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return false;
+		} finally {
+			try {
+				dbconn.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public List<String[]> queryOne() {
@@ -701,14 +700,95 @@ public class DBClient {
 				int minute = resultSet.getInt("minute");
 				int duration = resultSet.getInt("duration");
 
-				novemeberClassSchedule
-						.add(new String[] { courseName, startDate.toString(), endDate.toString(), intToDay(day),
-								Integer.toString(hour), Integer.toString(minute), Integer.toString(duration) });
+				novemeberClassSchedule.add(new String[] { courseName, startDate.toString(), endDate.toString(),
+						intToDay(day), Integer.toString(hour), Integer.toString(minute), Integer.toString(duration) });
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return novemeberClassSchedule;
+	}
+
+	public List<String[]> queryThree() {
+		List<String[]> trainerWorkingHours = new ArrayList<>();
+		try {
+			// Fetch schedule data
+			String query = "select t.trainerNumber, t.fname, t.lname, s.day, s.hour, s.minute, s.duration "
+					+ "from umidmuzrapov.trainer t join umidmuzrapov.course c on t.trainerNumber = c.trainerNumber "
+					+ "join umidmuzrapov.schedule s on c.className = s.className and c.startDate = s.startDate "
+					+ "where c.startDate <= TO_DATE('31-12-2023', 'DD-MM-YYYY') and c.endDate >= TO_DATE('01-12-2023', 'DD-MM-YYYY') "
+					+ "group by t.trainerNumber, t.fname, t.lname, s.day, s.hour, s.minute, s.duration "
+					+ "order by t.trainerNumber, s.day, s.hour";
+
+			Statement statement = dbconn.createStatement();
+			ResultSet resultSet = statement.executeQuery(query);
+			List<String[]> rawScheduleData = new ArrayList<>();
+			while (resultSet.next()) {
+				String trainerNumber = resultSet.getString("trainerNumber");
+				String firstName = resultSet.getString("fname");
+				String lastName = resultSet.getString("lname");
+				int day = resultSet.getInt("day");
+				int hour = resultSet.getInt("hour");
+				int minute = resultSet.getInt("minute");
+				int duration = resultSet.getInt("duration");
+
+				rawScheduleData.add(new String[] { trainerNumber, firstName + " " + lastName, String.valueOf(day),
+						String.valueOf(hour), String.valueOf(minute), String.valueOf(duration) });
+			}
+
+			// Calculate total hours
+			Map<String, Integer> totalHours = calculateTotalHours(rawScheduleData);
+
+			// Add to trainerWorkingHours only if the trainer has scheduled hours
+			for (String[] data : rawScheduleData) {
+				String trainerKey = data[0];
+				if (totalHours.containsKey(trainerKey)) {
+					String[] combinedData = new String[] { data[0], // Trainer number
+							data[1], // Trainer name
+							intToDay(Integer.parseInt(data[2])), // Day
+							data[3], // Hour
+							data[4], // Minute
+							data[5], // Duration
+							String.valueOf(totalHours.get(trainerKey)) // Total hours
+					};
+					trainerWorkingHours.add(combinedData);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return trainerWorkingHours;
+	}
+
+	private Map<String, Integer> calculateTotalHours(List<String[]> scheduleData) {
+		Map<Integer, Integer> dayCounts = countDaysInDecember();
+		Map<String, Integer> trainerTotalHours = new HashMap<>();
+
+		for (String[] entry : scheduleData) {
+			String trainerKey = entry[0]; // Use trainer number as key
+			int dayOfWeek = Integer.parseInt(entry[3]);
+			int duration = Integer.parseInt(entry[6]);
+			int occurrences = dayCounts.getOrDefault(dayOfWeek, 0);
+			int totalHours = occurrences * duration;
+
+			trainerTotalHours.put(trainerKey, trainerTotalHours.getOrDefault(trainerKey, 0) + totalHours);
+		}
+
+		return trainerTotalHours;
+	}
+
+	private Map<Integer, Integer> countDaysInDecember() {
+		Map<Integer, Integer> dayCounts = new HashMap<>();
+		Calendar cal = Calendar.getInstance();
+		cal.set(2023, Calendar.DECEMBER, 1); // Start at December 1st, 2023
+
+		while (cal.get(Calendar.MONTH) == Calendar.DECEMBER) {
+			int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+			dayCounts.put(dayOfWeek, dayCounts.getOrDefault(dayOfWeek, 0) + 1);
+			cal.add(Calendar.DAY_OF_MONTH, 1);
+		}
+
+		return dayCounts;
 	}
 
 	public void printCourseSchedule(String firstname, String lastname) throws SQLException {
@@ -783,7 +863,7 @@ public class DBClient {
 		List<String> packages = new ArrayList<>();
 		String query = "SELECT packageName FROM umidmuzrapov.Package";
 		try (PreparedStatement preparedStatement = dbconn.prepareStatement(query);
-			ResultSet resultSet = preparedStatement.executeQuery()) {
+				ResultSet resultSet = preparedStatement.executeQuery()) {
 			while (resultSet.next()) {
 				packages.add(resultSet.getString("packageName"));
 			}
