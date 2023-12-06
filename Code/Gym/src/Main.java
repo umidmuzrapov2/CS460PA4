@@ -59,17 +59,14 @@ public class Main {
 	/**
 	 * Method handleRecordOperations
 	 * 
-	 * Purpose:
-	 * 	This method coordinates methods related to CRUD operations
-	 *  -- update, delete, and add.
-	 *  
-	 *  Pre-condition:
-	 *  	Connection to the dbms has been successfully established.
-	 *  Post-condition:
-	 *  	None
-	 *  
+	 * Purpose: This method coordinates methods related to CRUD operations --
+	 * update, delete, and add.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * Post-condition: None
+	 * 
 	 * @param scanner input stream
-	 * @param client a client connected to dbms.
+	 * @param client  a client connected to dbms.
 	 */
 	private static void handleRecordOperations(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Record Operations ---");
@@ -100,17 +97,15 @@ public class Main {
 	 * Method handleMemberOperations
 	 * 
 	 * Purpose: The method coordinate the methods that handle CRUD on member:
-	 * 	addition, deletion.
+	 * addition, deletion.
 	 * 
-	 * Pre-condition:
-	 *  	Connection to the dbms has been successfully established.
-	 *  
-	 *  Post-condition:
-	 *  	None
-	 *  
-	 *  
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * 
+	 * Post-condition: None
+	 * 
+	 * 
 	 * @param scanner input stream
-	 * @param client a client connected to dbms.
+	 * @param client  a client connected to dbms.
 	 */
 	private static void handleMemberOperations(Scanner scanner, DBClient client) {
 		System.out.println("\n--- Member Operations ---");
@@ -193,21 +188,32 @@ public class Main {
 			} else {
 				System.out.println("\nMember's November schedule:");
 				for (String[] schedule : queryTwoResult) {
-					System.out.println("Course: " + schedule[0] + " | Day: "
-							+ schedule[3] + " | Time: " + schedule[4] + ":"
-							+ schedule[5] + " | Duration: " + schedule[6] + " minutes");
+					System.out.println("Course: " + schedule[0] + " | Day: " + schedule[3] + " | Time: " + schedule[4]
+							+ ":" + schedule[5] + " | Duration: " + schedule[6] + " minutes");
 				}
 			}
 			break;
 		case 3:
-			// Call method to handle query 3
+			List<String[]> queryThreeResults = client.queryThree();
+			if (queryThreeResults.size() == 0) {
+				System.out.println("\nNo trainers work during December.");
+			} else {
+				System.out.println("\nTrainers December schedule:");
+				for (String[] trainer : queryThreeResults) {
+					String formattedTime = String.format("%02d:%02d", Integer.parseInt(trainer[3]),
+							Integer.parseInt(trainer[4]));
+					System.out.println("Trainer number: " + trainer[0] + " | Trainer name: " + trainer[1]
+							+ " | Start time on " + trainer[2] + ": " + formattedTime + " | Duration: " + trainer[5]
+							+ " minutes | Total Hours in December: " + trainer[6]);
+				}
+			}
 			break;
 		case 4:
 			// Call method to handle custom query
 			System.out.println("Enter the firsname");
-    		String fname= scanner.nextLine();
-    		System.out.println("Enter the lastname");
-    		String lname= scanner.nextLine();
+			String fname = scanner.nextLine();
+			System.out.println("Enter the lastname");
+			String lname = scanner.nextLine();
 			try {
 				client.printCourseSchedule(fname, lname);
 			} catch (SQLException e) {
@@ -299,64 +305,65 @@ public class Main {
 	}
 
 	/*
-  When adding a course package, the system lists all available courses that have not yet ended, 
-  allowing the admin to select which to include. */
-  private static void addCoursePackage(Scanner scanner, DBClient client) {
-    System.out.println("Adding a new course package.");
-    System.out.print("Enter the name of the course package to add: ");
-    String packageName = scanner.nextLine();
+	 * When adding a course package, the system lists all available courses that
+	 * have not yet ended, allowing the admin to select which to include.
+	 */
+	private static void addCoursePackage(Scanner scanner, DBClient client) {
+		System.out.println("Adding a new course package.");
+		System.out.print("Enter the name of the course package to add: ");
+		String packageName = scanner.nextLine();
 
-    System.out.print("Enter the price of the course package: ");
-    int packagePrice = scanner.nextInt();
+		System.out.print("Enter the price of the course package: ");
+		int packagePrice = scanner.nextInt();
 
-    List<String[]> allCourses = client.listOngoingCourses();
-    if (allCourses.isEmpty()) {
-        System.out.println("There are no ongoing courses to add to the package.");
-        return;
-    }
+		List<String[]> allCourses = client.listOngoingCourses();
+		if (allCourses.isEmpty()) {
+			System.out.println("There are no ongoing courses to add to the package.");
+			return;
+		}
 
-    List<String[]> selectedCourses = new ArrayList<>();
-    System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
-    for (int i = 0; i < allCourses.size(); i++) {
-        System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
-    }
+		List<String[]> selectedCourses = new ArrayList<>();
+		System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
+		for (int i = 0; i < allCourses.size(); i++) {
+			System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
+		}
 
-    String input;
-    while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
-        boolean courseFound = false;
-        for (String[] course : allCourses) {
-            if (course[0].equalsIgnoreCase(input)) {
-                if (selectedCourses.contains(course)) {
-                    System.out.println(input + " has already been added.");
-                } else {
-                    selectedCourses.add(course);
-                    System.out.println(input + " added.");
-                }
-                courseFound = true;
-                break;
-            }
-        }
-        if (!courseFound) {
-            System.out.println("Course not found. Please enter a valid course name.");
-        }
-        System.out.println("Enter next course or 'done':");
-    }
+		String input;
+		while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
+			boolean courseFound = false;
+			for (String[] course : allCourses) {
+				if (course[0].equalsIgnoreCase(input)) {
+					if (selectedCourses.contains(course)) {
+						System.out.println(input + " has already been added.");
+					} else {
+						selectedCourses.add(course);
+						System.out.println(input + " added.");
+					}
+					courseFound = true;
+					break;
+				}
+			}
+			if (!courseFound) {
+				System.out.println("Course not found. Please enter a valid course name.");
+			}
+			System.out.println("Enter next course or 'done':");
+		}
 
-    if (selectedCourses.isEmpty()) {
-        System.out.println("No courses were selected.");
-    } else {
-        if (!client.addPackage(packageName, packagePrice)) {
-          System.out.println("Failed to add package: " + packageName);
-          return;
-        }
-        boolean result = client.addCoursePackage(packageName, selectedCourses);
-        if (result) {
-            System.out.println("Course package added successfully.");
-        } else {
-            System.out.println("Failed to add course package.");
-        }
-    }
-}
+		if (selectedCourses.isEmpty()) {
+			System.out.println("No courses were selected.");
+		} else {
+			if (!client.addPackage(packageName, packagePrice)) {
+				System.out.println("Failed to add package: " + packageName);
+				return;
+			}
+			boolean result = client.addCoursePackage(packageName, selectedCourses);
+			if (result) {
+				System.out.println("Course package added successfully.");
+			} else {
+				System.out.println("Failed to add course package.");
+			}
+		}
+	}
 
 	private static void updateCoursePackage(Scanner scanner, DBClient client) {
 		System.out.println("Select a course package to update:");
@@ -449,27 +456,26 @@ public class Main {
 
 
 	private static void deleteCoursePackage(Scanner scanner, DBClient client) {
-    System.out.println("Select a course package to delete:");
-    List<String> packages = client.listAllPackages();
-    for (int i = 0; i < packages.size(); i++) {
-        System.out.println((i + 1) + ". " + packages.get(i));
-    }
+		System.out.println("Select a course package to delete:");
+		List<String> packages = client.listAllPackages();
+		for (int i = 0; i < packages.size(); i++) {
+			System.out.println((i + 1) + ". " + packages.get(i));
+		}
 
-    int choice = scanner.nextInt();
-    scanner.nextLine();  // Consume the newline left-over
-    if (choice < 1 || choice > packages.size()) {
-        System.out.println("Invalid choice. Operation cancelled.");
-        return;
-    }
+		int choice = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline left-over
+		if (choice < 1 || choice > packages.size()) {
+			System.out.println("Invalid choice. Operation cancelled.");
+			return;
+		}
 
-    String packageName = packages.get(choice - 1);
-    if (client.deleteCoursePackage(packageName)) {
-        System.out.println("Package '" + packageName + "' deleted successfully.");
-    } else {
-        System.out.println("Failed to delete package.");
-    }
-}
-
+		String packageName = packages.get(choice - 1);
+		if (client.deleteCoursePackage(packageName)) {
+			System.out.println("Package '" + packageName + "' deleted successfully.");
+		} else {
+			System.out.println("Failed to delete package.");
+		}
+	}
 
 	private static List<List<Integer>> getSchedule() {
 		System.out.println("Enter the schedule for course or done:");
