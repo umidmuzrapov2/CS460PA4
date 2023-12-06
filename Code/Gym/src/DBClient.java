@@ -129,31 +129,30 @@ public class DBClient {
 			// Check for unreturned equipment
 			if (hasUnreturnedEquipment(memberNumber)) {
 				// Retrieve unreturned equipment items
-				String unreturnedQuery = "select itemNumber, quantity from umidmuzrapov.equipmentloan where memberItem = "
-						+ memberNumber + " and returnedDate is NULL";
+				String unreturnedQuery = String.format(
+						"select itemNumber, quantity from umidmuzrapov.equipmentloan where memberItem = %d and returnedDate is NULL",
+						memberNumber);
 				Statement unreturnedStmt = dbconn.createStatement();
 				ResultSet unreturnedItems = unreturnedStmt.executeQuery(unreturnedQuery);
 
 				System.out.println("\nThe following loaned equipment will be marked as lost:");
-				// Process each unreturned item
 				while (unreturnedItems.next()) {
 					int itemNumber = unreturnedItems.getInt("itemNumber");
 					int loanedQuantity = unreturnedItems.getInt("quantity");
 					System.out.println("Item number: " + itemNumber + " | Quantity: " + loanedQuantity);
 
-					// Update the Equipment table, marking the equipment as lost and adjusting the
-					// quantity
-					String updateEquipQuery = "UPDATE umidmuzrapov.equipment SET quantity = quantity - "
-							+ loanedQuantity + " WHERE itemNumber = " + itemNumber;
+					String updateEquipQuery = String.format(
+							"update umidmuzrapov.equipment set quantity = quantity - %d where itemNumber = %d",
+							loanedQuantity, itemNumber);
 					dbconn.createStatement().executeUpdate(updateEquipQuery);
 				}
 			}
 
 			// Check if the member has unpaid balances
 			if (hasUnpaidBalances(memberNumber)) {
-				// Retrieve and print unpaid balance information
-				String balanceQuery = "select transactionNumber, total from umidmuzrapov.transaction where memberNumber = "
-						+ memberNumber + " and (type = 'Unpaid' or type is NULL)";
+				String balanceQuery = String.format(
+						"select transactionNumber, total from umidmuzrapov.transaction where memberNumber = %d and (type = 'Unpaid' or type is NULL)",
+						memberNumber);
 				Statement balanceStmt = dbconn.createStatement();
 				ResultSet balanceResult = balanceStmt.executeQuery(balanceQuery);
 
@@ -171,9 +170,9 @@ public class DBClient {
 
 			// Check if the member is actively participating in any courses
 			if (isParticipatingInCourses(memberNumber)) {
-				// Retrieve courses that the member is enrolled in
-				String enrolledCoursesQuery = "select courseName, startDate from umidmuzrapov.enrollment where memberNumber = "
-						+ memberNumber;
+				String enrolledCoursesQuery = String.format(
+						"select courseName, startDate from umidmuzrapov.enrollment where memberNumber = %d",
+						memberNumber);
 				Statement enrolledStmt = dbconn.createStatement();
 				ResultSet enrolledCourses = enrolledStmt.executeQuery(enrolledCoursesQuery);
 
@@ -182,28 +181,34 @@ public class DBClient {
 					String courseName = enrolledCourses.getString("courseName");
 					String startDate = enrolledCourses.getString("startDate");
 					System.out.println(courseName);
-
-					// Delete the enrollment record
-					String deleteEnrollmentQuery = "delete from umidmuzrapov.enrollment where memberNumber = "
-							+ memberNumber + " and courseName = '" + courseName + "' and startDate = '" + startDate
-							+ "'";
-					dbconn.createStatement().executeUpdate(deleteEnrollmentQuery);
-
-					// Update available spots in the course
-					String updateCourseQuery = "update umidmuzrapov.course set currentParticipant = currentParticipant - 1 where className = '"
-							+ courseName + "' and startDate = '" + startDate + "'";
-					dbconn.createStatement().executeUpdate(updateCourseQuery);
+					String updateCourseEnrollment = String.format(
+							"update from umidmuzrapov.course set currentParticipant = currentParticipant - 1 where courseName = %s and startDate = %s",
+							courseName, startDate);
 				}
+				String deleteEnrollmentQuery = String
+						.format("delete from umidmuzrapov.enrollment where memberNumber = %d", memberNumber);
+				dbconn.createStatement().executeUpdate(deleteEnrollmentQuery);
 			}
 
-			// If all checks pass, delete the member
-			String deleteQuery = "delete from umidmuzrapov.member where memberNumber = " + memberNumber;
-			int rowsAffected = dbconn.createStatement().executeUpdate(deleteQuery);
+			// Additional steps to handle foreign key constraints before deleting the member
+			// Delete related records from Transaction table
+			String deleteTransactionQuery = String
+					.format("delete from umidmuzrapov.transaction where memberNumber = %d", memberNumber);
+			dbconn.createStatement().executeUpdate(deleteTransactionQuery);
+
+			// Delete related records from EquipmentLoan table
+			String deleteEquipmentLoanQuery = String
+					.format("delete from umidmuzrapov.equipmentloan where memberItem = %d", memberNumber);
+			dbconn.createStatement().executeUpdate(deleteEquipmentLoanQuery);
+
+			// Finally, delete the member
+			String deleteMemberQuery = String.format("delete from umidmuzrapov.member where memberNumber = %d",
+					memberNumber);
+			int rowsAffected = dbconn.createStatement().executeUpdate(deleteMemberQuery);
 
 			dbconn.commit(); // Commit transaction if all operations are successful
-			// Check if the member was successfully deleted
 			if (rowsAffected > 0) {
-				return "Member deleted successfully"; // Member deleted successfully
+				return "Member deleted successfully!"; // Member deleted successfully
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -213,7 +218,7 @@ public class DBClient {
 				ex.printStackTrace();
 			}
 		}
-		return "Member cannot be deleted"; // Member deletion failed
+		return "Member cannot be deleted."; // Member deletion failed
 	}
 
 	/**
@@ -223,11 +228,12 @@ public class DBClient {
 	 */
 	private boolean hasUnreturnedEquipment(int memberNumber) {
 		try {
-			String query = "select count(*) from umidmuzrapov.equipmentloan where memberItem = ? and returnedDate is NULL";
-			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
-			preparedStatement.setInt(1, memberNumber);
+			String query = String.format(
+					"select count(*) from umidmuzrapov.equipmentloan where memberItem = %d and returnedDate is NULL",
+					memberNumber);
+			Statement statement = dbconn.createStatement();
 
-			ResultSet resultSet = preparedStatement.executeQuery();
+			ResultSet resultSet = statement.executeQuery(query);
 			if (resultSet.next()) {
 				return resultSet.getInt(1) > 0;
 			}
@@ -244,11 +250,12 @@ public class DBClient {
 	 */
 	private boolean hasUnpaidBalances(int memberNumber) {
 		try {
-			String query = "select count(*) from umidmuzrapov.transaction where memberNumber = ? and (type = 'Unpaid' or type is NULL)";
-			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
-			preparedStatement.setInt(1, memberNumber);
+			String query = String.format(
+					"select count(*) from umidmuzrapov.transaction where memberNumber = %d and (type = 'Unpaid' or type is NULL)",
+					memberNumber);
+			Statement statement = dbconn.createStatement();
 
-			ResultSet resultSet = preparedStatement.executeQuery();
+			ResultSet resultSet = statement.executeQuery(query);
 			if (resultSet.next()) {
 				return resultSet.getInt(1) > 0;
 			}
@@ -266,11 +273,11 @@ public class DBClient {
 	 */
 	private boolean isParticipatingInCourses(int memberNumber) {
 		try {
-			String query = "select count(*) from umidmuzrapov.enrollment where memberNumber = ?";
-			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
-			preparedStatement.setInt(1, memberNumber);
+			String query = String.format("select count(*) from umidmuzrapov.enrollment where memberNumber = %d",
+					memberNumber);
+			Statement statement = dbconn.createStatement();
 
-			ResultSet resultSet = preparedStatement.executeQuery();
+			ResultSet resultSet = statement.executeQuery(query);
 			if (resultSet.next()) {
 				return resultSet.getInt(1) > 0;
 			}
@@ -300,6 +307,7 @@ public class DBClient {
 				return false;
 			} else {
 				System.out.printf("Trainer with id: %d was chosen for this course.\n", trainerNumber);
+
 			}
 
 			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
@@ -313,6 +321,22 @@ public class DBClient {
 			preparedStatement.setInt(6, trainerNumber);
 
 			int rowsAffected = preparedStatement.executeUpdate();
+			if (rowsAffected > 0) {
+				for (List<Integer> schedule : schedules) {
+					String scheduleInsert = "INSERT INTO umidmuzrapov.Schedule (className, startDate, day, hour, minute, duration) values (?, ?, ?, ?, ?, ?)";
+					preparedStatement = dbconn.prepareStatement(scheduleInsert);
+					preparedStatement.setString(1, className);
+					preparedStatement.setDate(2, new java.sql.Date(startDate.getTime()));
+					preparedStatement.setInt(3, schedule.get(0));
+					preparedStatement.setInt(4, schedule.get(1));
+					preparedStatement.setInt(5, schedule.get(2));
+					preparedStatement.setInt(6, schedule.get(3));
+					preparedStatement.executeUpdate();
+				}
+
+				System.out.println("The course is added.");
+			}
+
 			return rowsAffected > 0;
 
 		} catch (SQLException e) {
@@ -320,25 +344,22 @@ public class DBClient {
 			try {
 				dbconn.rollback();
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				System.out.println(e.getMessage());
 			}
 			return false;
 		} finally {
 			try {
-				dbconn.setAutoCommit(true);
+				dbconn.commit();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				System.out.println(e.getMessage());
 			}
 		}
 	}
 
 	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException {
 		Statement statement = dbconn.createStatement();
-		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)"
-				+ " MINUS"
-				+ " (SELECT t.trainerNumber"
-				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c"
-				+ " WHERE t.trainerNumber = c.trainerNumber)";
+		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)" + " MINUS" + " (SELECT t.trainerNumber"
+				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c" + " WHERE t.trainerNumber = c.trainerNumber)";
 
 		ResultSet result = statement.executeQuery(queryOne);
 
@@ -346,11 +367,11 @@ public class DBClient {
 			return result.getInt("trainerNumber");
 		} else {
 			StringBuilder queryTwo = new StringBuilder();
-			queryTwo.append("SELECT DISTINCT t.trainerNumber"
-					+ " FROM Trainer t"
-					+ " JOIN Course c ON t.trainerNumber = c.trainerNumber"
-					+ " LEFT JOIN Schedule s ON c.className = s.className AND c.startDate = s.startDate"
-					+ " WHERE s.className IS NULL OR NOT (?busy)");
+			queryTwo.append("(SELECT DISTINCT t.trainerNumber FROM umidmuzrapov.Trainer t) "
+					+ " MINUS (SELECT DISTINCT t.trainerNumber"
+					+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c, umidmuzrapov.Schedule s"
+					+ " WHERE t.trainerNumber=c.trainerNumber AND s.className = c.className AND s.startDate = c.startDate"
+					+ " AND (?busy))");
 			StringBuilder busy = new StringBuilder();
 
 			for (List<Integer> schedule : schedules) {
@@ -362,7 +383,6 @@ public class DBClient {
 			}
 
 			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
-			System.out.println(finalQuery);
 			ResultSet availableTrainer = statement.executeQuery(finalQuery);
 
 			if (availableTrainer.next()) {
@@ -652,14 +672,14 @@ public class DBClient {
 		List<String[]> membersWithNegativeBalance = new ArrayList<>();
 		try {
 			// SQL query to find members with negative balance
-			String query = "select m.fname, m.lname, m.phoneNumber, SUM(t.total) as balance "
-					+ "from umidmuzrapov.member m "
-					+ "join umidmuzrapov.transaction t on m.memberNumber = t.memberNumber "
-					+ "group by m.fname, m.lname, m.phoneNumber " + "having SUM(t.total) < 0";
+			String query = "select m.fname, m.lname, m.phoneNumber, "
+					+ "SUM(case when t.type = 'deposit' then t.total else -t.total end) as balance from "
+					+ "umidmuzrapov.member m join umidmuzrapov.transaction t on m.memberNumber = t.memberNumber group by "
+					+ "m.memberNumber, m.fname, m.lname, m.phoneNumber having SUM(case when t.type = 'deposit' "
+					+ "then t.total else -t.total end) < 0";
 
-			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
-			ResultSet resultSet = preparedStatement.executeQuery();
-
+			Statement statement = dbconn.createStatement();
+			ResultSet resultSet = statement.executeQuery(query);
 			while (resultSet.next()) {
 				String firstName = resultSet.getString("fname");
 				String lastName = resultSet.getString("lname");
@@ -674,17 +694,49 @@ public class DBClient {
 		return membersWithNegativeBalance;
 	}
 
+	public List<String[]> queryTwo(int memberNumber) {
+		List<String[]> novemeberClassSchedule = new ArrayList<>();
+		try {
+			String query = String.format(
+					"select e.courseName, c.startDate, c.endDate, s.day, s.hour, s.minute, s.duration "
+							+ "from umidmuzrapov.enrollment e join umidmuzrapov.course c on e.courseName = c.className and e.startDate = c.startDate "
+							+ "join umidmuzrapov.schedule s on c.className = s.className and c.startDate = s.startDate where e.memberNumber = %d "
+							+ "and c.startDate <= TO_DATE('30-11-2023', 'DD-MM-YYYY') and c.endDate >= TO_DATE('01-11-2023', 'DD-MM-YYYY')",
+					memberNumber);
+
+			Statement statement = dbconn.createStatement();
+			ResultSet resultSet = statement.executeQuery(query);
+			while (resultSet.next()) {
+				String courseName = resultSet.getString("courseName");
+				Date startDate = resultSet.getDate("startDate");
+				Date endDate = resultSet.getDate("endDate");
+				int day = resultSet.getInt("day");
+				int hour = resultSet.getInt("hour");
+				int minute = resultSet.getInt("minute");
+				int duration = resultSet.getInt("duration");
+
+				novemeberClassSchedule
+						.add(new String[] { courseName, startDate.toString(), endDate.toString(), intToDay(day),
+								Integer.toString(hour), Integer.toString(minute), Integer.toString(duration) });
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return novemeberClassSchedule;
+	}
+
 	public void printCourseSchedule(String firstname, String lastname) throws SQLException {
 
 		int memberNumber = memberExists(firstname, lastname);
 		if (memberNumber < 0) {
+			System.out.println("No member with this name exists.");
 			return;
 		}
 
-		String query = String.format("SELECT c.courseName, c.startDate, s.day, s.hour, s.minute, s.duration"
-				+ "FROM umidmuzrapov.Member m, umidmuzrapov.Course c, umidmuzrapov.Enrollment e, umidmuzrapov.Schedule s"
-				+ "WHERE m.memberNumber=e.memberNumber AND m.memberNumber=%d"
-				+ " AND c.courseName=e.courseName AND c.startDate=e.startDate AND s.courseName=c.courseName AND s.startDate=c.startDate",
+		String query = String.format("SELECT c.className, c.startDate, s.day, s.hour, s.minute, s.duration"
+				+ " FROM umidmuzrapov.Member m, umidmuzrapov.Course c, umidmuzrapov.Enrollment e, umidmuzrapov.Schedule s"
+				+ " WHERE m.memberNumber=e.memberNumber AND m.memberNumber=%d"
+				+ " AND c.className=e.courseName AND c.startDate=e.startDate AND s.className=c.className AND s.startDate=c.startDate ORDER BY s.day",
 				memberNumber);
 
 		Statement statement = dbconn.createStatement();
@@ -692,7 +744,7 @@ public class DBClient {
 
 		System.out.printf("Schedule for %s %s\n", firstname, lastname);
 		while (result.next()) {
-			System.out.printf("Course %s. %s, %d:%d. Duration: %d.\n", result.getString("courseName"),
+			System.out.printf("Course %s. %s, %d:%d. Duration: %d.\n", result.getString("className"),
 					intToDay(result.getInt("day")), result.getInt("hour"), result.getInt("minute"),
 					result.getInt("duration"));
 		}
@@ -701,8 +753,8 @@ public class DBClient {
 
 	public int memberExists(String firstname, String lastname) throws SQLException {
 		Statement statement = dbconn.createStatement();
-		String query = "SELECT * FROM umidmuzrapov.Member" + " WHERE fname=1? and lname=2?";
-		query.replace("1?", firstname).replace("?2", lastname);
+		String query = "SELECT * FROM umidmuzrapov.Member" + " WHERE fname='1?' and lname='2?'";
+		query = query.replace("1?", firstname).replace("2?", lastname);
 		ResultSet result = statement.executeQuery(query);
 		ArrayList<Integer> memberNumbers = new ArrayList<Integer>();
 
@@ -712,7 +764,7 @@ public class DBClient {
 		}
 
 		if (memberNumbers.size() == 0) {
-			return 0;
+			return -1;
 		} else if (memberNumbers.size() == 1) {
 			return memberNumbers.remove(0);
 		} else {
@@ -743,22 +795,22 @@ public class DBClient {
 
 	private String intToDay(int day) {
 		switch (day) {
-			case 1:
-				return "Monday";
-			case 2:
-				return "Tueday";
-			case 3:
-				return "Wednesday";
-			case 4:
-				return "Thursday";
-			case 5:
-				return "Friday";
-			case 6:
-				return "Satruday";
-			case 7:
-				return "Sunday";
-			default:
-				return "None";
+		case 1:
+			return "Monday";
+		case 2:
+			return "Tueday";
+		case 3:
+			return "Wednesday";
+		case 4:
+			return "Thursday";
+		case 5:
+			return "Friday";
+		case 6:
+			return "Satruday";
+		case 7:
+			return "Sunday";
+		default:
+			return "None";
 		}
 	}
 

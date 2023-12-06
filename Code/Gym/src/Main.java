@@ -1,9 +1,9 @@
 import java.sql.Date;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.Scanner;
 
 public class Main {
-
   /**
    * Method main
    *
@@ -408,11 +408,8 @@ public class Main {
   private static int isNumeric(String numberString) {
 		try {
 			return Integer.parseInt(numberString.trim());
-		}
-		catch(NumberFormatException ex) {
+		} catch (NumberFormatException ex) {
 			return -1;
 		}
 	}
 }
-
-
