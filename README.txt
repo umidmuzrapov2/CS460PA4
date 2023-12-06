@@ -12,6 +12,10 @@ javac DBClient.java Main.java
 Execution:
 
 Run the program with your database credentials as follows:
+
+Add the Oracle JDBC driver to your CLASSPATH environment variable:
+export CLASSPATH=/usr/lib/oracle/19.8/client64/lib/ojdbc8.jar:${CLASSPATH}
+
 java Main <username> <password>
 
 Contributions
