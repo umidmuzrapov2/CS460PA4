@@ -19,6 +19,7 @@ Each team member contributed to different aspects of the project:
 
 Hamad Marhoon:
 Focused on Course Package operations.
+Developed user command line interface.
 Prepared the README file.
 
 Umid Muzrapov:
