@@ -1,15 +1,17 @@
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.DayOfWeek;
 
 /**
- * Class name: DBClient 
+ * Class name: DBClient
  * 
  * Name: Umidjon Muzrapov, Abdullah Alkhamis, Hamad Marhoon, Yahya Al Malallah
- *  
- * Dependencies: 
- * java.sql.*
- * java.util.*
+ * 
+ * Dependencies: java.sql.* java.util.*
  * 
  * Inherits from: None Interfaces: None ----------------------------------------
  * 
@@ -208,58 +210,33 @@ public class DBClient {
 				}
 			}
 
-			// Check if the member has unpaid balances
-			if (hasUnpaidBalances(memberNumber)) {
-				String balanceQuery = String.format(
-						"select transactionNumber, total from umidmuzrapov.transaction where memberNumber = %d and (type = 'Unpaid' or type is NULL)",
-						memberNumber);
-				Statement balanceStmt = dbconn.createStatement();
-				ResultSet balanceResult = balanceStmt.executeQuery(balanceQuery);
+			// Delete records from the Enrollment table
+			String deleteEnrollmentQuery = String.format("delete from umidmuzrapov.enrollment where memberNumber = %d",
+					memberNumber);
+			dbconn.createStatement().executeUpdate(deleteEnrollmentQuery);
 
-				System.out.println("\nThe member has unpaid charge(s).");
-				while (balanceResult.next()) {
-					int transactionNumber = balanceResult.getInt("transactionNumber");
-					float total = balanceResult.getFloat("total");
-					System.out.println(
-							"Unpaid Balance - Transaction Number: " + transactionNumber + ", Amount: " + total);
-				}
-
-				dbconn.rollback(); // Rollback transaction
-				return "Cannot delete member due to unpaid charge(s)."; // Prevent deletion due to unpaid balances
-			}
-
-			// Check if the member is actively participating in any courses
-			if (isParticipatingInCourses(memberNumber)) {
-				String enrolledCoursesQuery = String.format(
-						"select courseName, startDate from umidmuzrapov.enrollment where memberNumber = %d",
-						memberNumber);
-				Statement enrolledStmt = dbconn.createStatement();
-				ResultSet enrolledCourses = enrolledStmt.executeQuery(enrolledCoursesQuery);
-
-				System.out.println("\nThe member will be dropped from the following course(s):");
-				while (enrolledCourses.next()) {
-					String courseName = enrolledCourses.getString("courseName");
-					String startDate = enrolledCourses.getString("startDate");
-					System.out.println(courseName);
-					String updateCourseEnrollment = String.format(
-							"update from umidmuzrapov.course set currentParticipant = currentParticipant - 1 where courseName = %s and startDate = %s",
-							courseName, startDate);
-				}
-				String deleteEnrollmentQuery = String
-						.format("delete from umidmuzrapov.enrollment where memberNumber = %d", memberNumber);
-				dbconn.createStatement().executeUpdate(deleteEnrollmentQuery);
-			}
-
-			// Additional steps to handle foreign key constraints before deleting the member
-			// Delete related records from Transaction table
-			String deleteTransactionQuery = String
-					.format("delete from umidmuzrapov.transaction where memberNumber = %d", memberNumber);
-			dbconn.createStatement().executeUpdate(deleteTransactionQuery);
-
-			// Delete related records from EquipmentLoan table
+			// Delete records from the EquipmentLoan table
 			String deleteEquipmentLoanQuery = String
 					.format("delete from umidmuzrapov.equipmentloan where memberItem = %d", memberNumber);
 			dbconn.createStatement().executeUpdate(deleteEquipmentLoanQuery);
+
+			// Delete related records from Purchase and Transaction tables
+			String findTransactionsQuery = String.format(
+					"select transactionNumber from umidmuzrapov.transaction where memberNumber = %d", memberNumber);
+			ResultSet transactions = dbconn.createStatement().executeQuery(findTransactionsQuery);
+			while (transactions.next()) {
+				int transactionNumber = transactions.getInt("transactionNumber");
+
+				// Delete linked records from the Purchase table
+				String deletePurchaseQuery = String
+						.format("delete from umidmuzrapov.purchase where transactionNumber = %d", transactionNumber);
+				dbconn.createStatement().executeUpdate(deletePurchaseQuery);
+			}
+
+			// Delete the transactions
+			String deleteTransactionQuery = String
+					.format("delete from umidmuzrapov.transaction where memberNumber = %d", memberNumber);
+			dbconn.createStatement().executeUpdate(deleteTransactionQuery);
 
 			// Finally, delete the member
 			String deleteMemberQuery = String.format("delete from umidmuzrapov.member where memberNumber = %d",
@@ -313,35 +290,35 @@ public class DBClient {
 		return false;
 	}
 
-	/**
-	 * Method hasUnpaidBalances
-	 * 
-	 * Purpose: Implement logic to check if the member has unpaid balances
-	 * 
-	 * Pre-condition: Connection to the dbms has been successfully established.
-	 *
-	 * Post-condition: None
-	 * 
-	 * 
-	 * @param memberNumber memberNumber id of the member
-	 * @return Return true if unpaid balances are found; otherwise, return false
-	 */
-	private boolean hasUnpaidBalances(int memberNumber) {
-		try {
-			String query = String.format(
-					"select count(*) from umidmuzrapov.transaction where memberNumber = %d and (type = 'Unpaid' or type is NULL)",
-					memberNumber);
-			Statement statement = dbconn.createStatement();
-
-			ResultSet resultSet = statement.executeQuery(query);
-			if (resultSet.next()) {
-				return resultSet.getInt(1) > 0;
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
+//	/**
+//	 * Method hasUnpaidBalances
+//	 * 
+//	 * Purpose: Implement logic to check if the member has unpaid balances
+//	 * 
+//	 * Pre-condition: Connection to the dbms has been successfully established.
+//	 *
+//	 * Post-condition: None
+//	 * 
+//	 * 
+//	 * @param memberNumber memberNumber id of the member
+//	 * @return Return true if unpaid balances are found; otherwise, return false
+//	 */
+//	private boolean hasUnpaidBalances(int memberNumber) {
+//		try {
+//			String query = String.format(
+//					"select count(*) from umidmuzrapov.transaction where memberNumber = %d and (type = 'Unpaid' or type is NULL)",
+//					memberNumber);
+//			Statement statement = dbconn.createStatement();
+//
+//			ResultSet resultSet = statement.executeQuery(query);
+//			if (resultSet.next()) {
+//				return resultSet.getInt(1) > 0;
+//			}
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//		return false;
+//	}
 
 	/**
 	 * Method isParticipatingInCourses
@@ -695,37 +672,37 @@ public class DBClient {
 	}
 
 	/**
-	* Method isCourseInPackage
-	* 
-	* Purpose:
-	* 	This method checks whether a specific course, identified by its class name and
-	* 	start date, is already included in a given course package. It queries the
-	* 	database to determine if the specified course is part of the course package.
-	* 
-	* Pre-condition:
-	* 	A valid connection to the DBMS must be established. The parameters provided,
-	* 	packageName, className, and startDate, should be non-null and correspond to
-	* 	existing entries in the database.
-	* 
-	* Post-condition:
-	* 	Returns true if the specified course is found in the specified package; otherwise,
-	* 	returns false. In case of a SQL exception, an error message is printed, and false
-	* 	is returned, indicating the course is not in the package (or that the query could
-	* 	not be reliably executed).
-	* 
-	* @param packageName The name of the course package to check.
-	* @param className   The name of the class to check for in the package.
-	* @param startDate   The start date of the class, used to uniquely identify the course.
-	* @return A boolean value: true if the course is in the package, false otherwise.
-	*/
+	 * Method isCourseInPackage
+	 * 
+	 * Purpose: This method checks whether a specific course, identified by its
+	 * class name and start date, is already included in a given course package. It
+	 * queries the database to determine if the specified course is part of the
+	 * course package.
+	 * 
+	 * Pre-condition: A valid connection to the DBMS must be established. The
+	 * parameters provided, packageName, className, and startDate, should be
+	 * non-null and correspond to existing entries in the database.
+	 * 
+	 * Post-condition: Returns true if the specified course is found in the
+	 * specified package; otherwise, returns false. In case of a SQL exception, an
+	 * error message is printed, and false is returned, indicating the course is not
+	 * in the package (or that the query could not be reliably executed).
+	 * 
+	 * @param packageName The name of the course package to check.
+	 * @param className   The name of the class to check for in the package.
+	 * @param startDate   The start date of the class, used to uniquely identify the
+	 *                    course.
+	 * @return A boolean value: true if the course is in the package, false
+	 *         otherwise.
+	 */
 	public boolean isCourseInPackage(String packageName, String className, String startDate) {
 		String query = "SELECT COUNT(*) FROM umidmuzrapov.CoursePackage WHERE packageName = ? AND className = ? AND startDate = ?";
-		
+
 		try (PreparedStatement preparedStatement = dbconn.prepareStatement(query)) {
 			preparedStatement.setString(1, packageName);
 			preparedStatement.setString(2, className);
 			preparedStatement.setDate(3, Date.valueOf(startDate));
-			
+
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
 					return resultSet.getInt(1) > 0;
@@ -736,7 +713,6 @@ public class DBClient {
 		}
 		return false;
 	}
-
 
 	/**
 	 * Method listOngoingCourses
@@ -1115,16 +1091,17 @@ public class DBClient {
 		List<String[]> trainerWorkingHours = new ArrayList<>();
 		try {
 			// Fetch schedule data
-			String query = "select t.trainerNumber, t.fname, t.lname, s.day, s.hour, s.minute, s.duration "
+			String query = "select t.trainerNumber, t.fname, t.lname, s.day, s.hour, s.minute, s.duration, c.startDate, c.endDate "
 					+ "from umidmuzrapov.trainer t join umidmuzrapov.course c on t.trainerNumber = c.trainerNumber "
 					+ "join umidmuzrapov.schedule s on c.className = s.className and c.startDate = s.startDate "
 					+ "where c.startDate <= TO_DATE('31-12-2023', 'DD-MM-YYYY') and c.endDate >= TO_DATE('01-12-2023', 'DD-MM-YYYY') "
-					+ "group by t.trainerNumber, t.fname, t.lname, s.day, s.hour, s.minute, s.duration "
+					+ "group by t.trainerNumber, t.fname, t.lname, s.day, s.hour, s.minute, s.duration, c.startDate, c.endDate "
 					+ "order by t.trainerNumber, s.day, s.hour";
 
 			Statement statement = dbconn.createStatement();
 			ResultSet resultSet = statement.executeQuery(query);
 			List<String[]> rawScheduleData = new ArrayList<>();
+
 			while (resultSet.next()) {
 				String trainerNumber = resultSet.getString("trainerNumber");
 				String firstName = resultSet.getString("fname");
@@ -1133,9 +1110,10 @@ public class DBClient {
 				int hour = resultSet.getInt("hour");
 				int minute = resultSet.getInt("minute");
 				int duration = resultSet.getInt("duration");
-
+				String startDate = resultSet.getString("startDate");
+				String endDate = resultSet.getString("endDate");
 				rawScheduleData.add(new String[] { trainerNumber, firstName + " " + lastName, String.valueOf(day),
-						String.valueOf(hour), String.valueOf(minute), String.valueOf(duration) });
+						String.valueOf(hour), String.valueOf(minute), String.valueOf(duration), startDate, endDate });
 			}
 
 			// Calculate total hours
@@ -1148,11 +1126,13 @@ public class DBClient {
 					String[] combinedData = new String[] { data[0], // Trainer number
 							data[1], // Trainer name
 							intToDay(Integer.parseInt(data[2])), // Day
+
 							data[3], // Hour
 							data[4], // Minute
 							data[5], // Duration
 							String.valueOf(totalHours.get(trainerKey)) // Total hours
 					};
+
 					trainerWorkingHours.add(combinedData);
 				}
 			}
@@ -1175,45 +1155,47 @@ public class DBClient {
 	 * @return Map of trainer IDs to total hours
 	 */
 	private Map<String, Integer> calculateTotalHours(List<String[]> scheduleData) {
-		Map<Integer, Integer> dayCounts = countDaysInDecember();
 		Map<String, Integer> trainerTotalHours = new HashMap<>();
 
 		for (String[] entry : scheduleData) {
-			String trainerKey = entry[0]; // Use trainer number as key
-			int dayOfWeek = Integer.parseInt(entry[3]);
-			int duration = Integer.parseInt(entry[6]);
-			int occurrences = dayCounts.getOrDefault(dayOfWeek, 0);
-			int totalHours = occurrences * duration;
 
+			// Parse input strings into LocalDateTime objects
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			LocalDateTime startDate = LocalDateTime.parse(entry[6], formatter);
+			LocalDateTime endDate = LocalDateTime.parse(entry[7], formatter);
+
+			// Clean the time part (set it to 00:00:00)
+			startDate = startDate.withHour(0).withMinute(0).withSecond(0);
+			endDate = endDate.withHour(0).withMinute(0).withSecond(0);
+
+			// Call the function to count occurrences of each day of the week
+			int[] dayOfWeekCount = countDaysOfWeek(startDate, endDate);
+
+			String trainerKey = entry[0]; // Use trainer number as key
+			int dayOfWeek = Integer.parseInt(entry[2]);
+			int duration = Integer.parseInt(entry[5]);
+			int totalHours = duration * dayOfWeekCount[dayOfWeek - 1];
 			trainerTotalHours.put(trainerKey, trainerTotalHours.getOrDefault(trainerKey, 0) + totalHours);
 		}
 
 		return trainerTotalHours;
 	}
 
-	/**
-	 * Method countDaysInDecember
-	 *
-	 * Purpose: Counts number of each weekday in December
-	 * 
-	 * Pre-condition: None
-	 *
-	 * Post-condition: Weekday count map returned
-	 * 
-	 * @return Map of weekdays to occurrences in December
-	 */
-	private Map<Integer, Integer> countDaysInDecember() {
-		Map<Integer, Integer> dayCounts = new HashMap<>();
-		Calendar cal = Calendar.getInstance();
-		cal.set(2023, Calendar.DECEMBER, 1); // Start at December 1st, 2023
+	// Function to count occurrences of each day of the week within a date range
+	private static int[] countDaysOfWeek(LocalDateTime startDate, LocalDateTime endDate) {
+		// Calculate the number of days between the two dates (inclusive)
+		long daysBetweenInclusive = ChronoUnit.DAYS.between(startDate, endDate) + 1;
 
-		while (cal.get(Calendar.MONTH) == Calendar.DECEMBER) {
-			int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-			dayCounts.put(dayOfWeek, dayCounts.getOrDefault(dayOfWeek, 0) + 1);
-			cal.add(Calendar.DAY_OF_MONTH, 1);
+		// Count the occurrences of each day of the week
+		int[] dayOfWeekCount = new int[7];
+
+		for (int i = 0; i < daysBetweenInclusive; i++) {
+			DayOfWeek dayOfWeek = startDate.plusDays(i).getDayOfWeek();
+			int dayIndex = dayOfWeek.getValue() - 1; // Adjust to 0-indexed for array
+			dayOfWeekCount[dayIndex]++;
 		}
 
-		return dayCounts;
+		return dayOfWeekCount;
 	}
 
 	/**
@@ -1370,11 +1352,13 @@ public class DBClient {
 	/**
 	 * Method listAllPackagesAndCourses
 	 *
-	 * Purpose: retrieves a list of all packages along with their costs and associated courses.
+	 * Purpose: retrieves a list of all packages along with their costs and
+	 * associated courses.
 	 *
 	 * Pre-condition: the package and coursePackage tables exist and are accessible.
 	 * 
-	 * Post-condition: returns a list of String arrays, each containing package name, cost, and courses.
+	 * Post-condition: returns a list of String arrays, each containing package
+	 * name, cost, and courses.
 	 * 
 	 * @return list of all the package information
 	 */
@@ -1402,9 +1386,9 @@ public class DBClient {
 	/**
 	 * Method packagePurchased
 	 *
-	 * Purpose: when a member purchases a package, it adds the transaction to the table,
-	 * records the purchase, updates the course participants for each course in the package,
-	 * and finally updates the member levelId based on amount spent.
+	 * Purpose: when a member purchases a package, it adds the transaction to the
+	 * table, records the purchase, updates the course participants for each course
+	 * in the package, and finally updates the member levelId based on amount spent.
 	 *
 	 * Pre-condition: chosen package name, its cost, and the memberNumber
 	 * 
@@ -1415,7 +1399,7 @@ public class DBClient {
 	public String packagePurchased(String packageName, String cost, int memberNumber) {
 		try {
 			dbconn.setAutoCommit(false);
-			// Get max transaction number
+			// get max transaction number
 			String maxTransactionNumberQuery = "select MAX(transactionNumber) from umidmuzrapov.transaction";
 			Statement maxTransactionNumberStmt = dbconn.createStatement();
 			ResultSet rs = maxTransactionNumberStmt.executeQuery(maxTransactionNumberQuery);
@@ -1424,7 +1408,7 @@ public class DBClient {
 				nextTransactionNumber = rs.getInt(1) + 1;
 			}
 
-			// Step 1: Add a transaction for the package purchase
+			// add a transaction for the package purchase
 			String transactionQuery = String.format(
 					"insert into umidmuzrapov.transaction (transactionNumber, memberNumber, total, transactionDate, type) "
 							+ "VALUES (%d, %d, %f, CURRENT_DATE, 'deposit')",
@@ -1432,22 +1416,46 @@ public class DBClient {
 			Statement transactionStmt = dbconn.createStatement();
 			transactionStmt.executeUpdate(transactionQuery);
 
-			// Step 2: Add the package to the Purchase table
+			// add the package to the Purchase table
 			String purchaseQuery = String.format(
 					"insert into umidmuzrapov.purchase (packageName, transactionNumber) VALUES ('%s', %d)", packageName,
 					nextTransactionNumber);
 			Statement purchaseStmt = dbconn.createStatement();
 			purchaseStmt.executeUpdate(purchaseQuery);
 
-			// Step 3: Update the currentParticipants for each course in the package
-			String updateParticipantsQuery = String.format(
-					"update umidmuzrapov.course set currentParticipant = currentParticipant + 1 where "
-							+ "(className, startDate) in (select className, startDate from umidmuzrapov.coursepackage where packageName = '%s')",
-					packageName);
-			Statement updateParticipantsStmt = dbconn.createStatement();
-			updateParticipantsStmt.executeUpdate(updateParticipantsQuery);
+			// update the currentParticipants for each course in the package and add to the
+			// enrollment table
+			String upcomingCoursesQuery = String
+					.format("select cp.className, cp.startDate from umidmuzrapov.coursepackage cp "
+							+ "join umidmuzrapov.course c on cp.className = c.className and cp.startDate = c.startDate "
+							+ "where cp.packageName = '%s' AND c.startDate >= CURRENT_DATE", packageName);
 
-			// Step 4: Update the member's levelId
+			Statement upcomingCoursesStmt = dbconn.createStatement();
+			ResultSet upcomingCourses = upcomingCoursesStmt.executeQuery(upcomingCoursesQuery);
+
+			// enroll the member in each course and update currentParticipant
+			while (upcomingCourses.next()) {
+				String className = upcomingCourses.getString("className");
+				Date startDate = upcomingCourses.getDate("startDate");
+
+				// Insert into enrollment table
+				String enrollQuery = String.format(
+						"insert into umidmuzrapov.enrollment (memberNumber, courseName, startDate) "
+								+ "VALUES (%d, '%s', TO_DATE('%tF', 'YYYY-MM-DD'))",
+						memberNumber, className, startDate);
+				Statement enrollStmt = dbconn.createStatement();
+				enrollStmt.executeUpdate(enrollQuery);
+
+				// Update currentParticipant in course table
+				String updateParticipantsQuery = String.format(
+						"update umidmuzrapov.course set currentParticipant = currentParticipant + 1 "
+								+ "where className = '%s' and startDate = TO_DATE('%tF', 'YYYY-MM-DD')",
+						className, startDate);
+				Statement updateParticipantsStmt = dbconn.createStatement();
+				updateParticipantsStmt.executeUpdate(updateParticipantsQuery);
+			}
+
+			// update the member's levelId based on amount spent
 			String levelUpdateQuery = String.format(
 					"update umidmuzrapov.member set levelId = case when (select SUM(total) "
 							+ "from umidmuzrapov.transaction where memberNumber = %d) >= 1000 then 3 when (select SUM(total) from umidmuzrapov.transaction "
