@@ -4,7 +4,7 @@ import java.util.*;
 
 public class DBClient {
 
-	@SuppressWarnings("unused")
+	// the field hold connection to db
 	private Connection dbconn;
 
 	public DBClient(String[] args) {
@@ -59,12 +59,21 @@ public class DBClient {
 	}
 
 	/**
+	 * Method addMember
+	 * 
+	 * Purpose: This method facilitate addition of a tuple into Member relation.
+	 * 
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 * Post-condition: addition of a tuple
+	 * 
 	 *
-	 * @param firstName
-	 * @param lastName
-	 * @param phoneNumber
-	 * @param levelId
-	 * @return
+	 * @param firstName   first name of the member
+	 * @param lastName    last name of the member
+	 * @param phoneNumber phone number of the member
+	 * @param levelId     membership level of a user
+	 * 
+	 * @return Status of sql execution
 	 */
 	public String addMember(String firstName, String lastName, String phoneNumber) {
 		try {
@@ -118,9 +127,19 @@ public class DBClient {
 	}
 
 	/**
+	 * Method memberNumber
+	 * 
+	 * Purpose: This method facilitates the deletion of a member from member
+	 * relation.
+	 * 
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
 	 *
-	 * @param memberNumber
-	 * @return
+	 * Post-condition: deletion of a tuple
+	 * 
+	 *
+	 * @param memberNumber id of the member who must be deleted
+	 * @return string that represent the status of sql execution
 	 */
 	public String deleteMember(int memberNumber) {
 		try {
@@ -222,9 +241,19 @@ public class DBClient {
 	}
 
 	/**
-	 * Implement logic to check if the member has unreturned equipment
+	 * 
+	 * Method hasUnreturnedEquipment
+	 * 
+	 * Purpose: Implement logic to check if the member has unreturned equipment
+	 * 
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
 	 *
-	 * Return true if unreturned equipment is found; otherwise, return false
+	 * Post-condition: None
+	 * 
+	 *
+	 * @param memberNumber id of the member
+	 * @return Return true if unreturned equipment is found; otherwise, return false
 	 */
 	private boolean hasUnreturnedEquipment(int memberNumber) {
 		try {
@@ -244,9 +273,17 @@ public class DBClient {
 	}
 
 	/**
-	 * Implement logic to check if the member has unpaid balances
+	 * Method hasUnpaidBalances
+	 * 
+	 * Purpose: Implement logic to check if the member has unpaid balances
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
 	 *
-	 * Return true if unpaid balances are found; otherwise, return false
+	 * Post-condition: None
+	 * 
+	 * 
+	 * @param memberNumber memberNumber id of the member
+	 * @return Return true if unpaid balances are found; otherwise, return false
 	 */
 	private boolean hasUnpaidBalances(int memberNumber) {
 		try {
@@ -266,10 +303,18 @@ public class DBClient {
 	}
 
 	/**
-	 * Implement logic to check if the member is actively participating in any
-	 * courses. If so, delete course participation records and update course spots
+	 * Method isParticipatingInCourses
+	 * 
+	 * Purpose: Implement logic to check if the member is actively participating in
+	 * any courses. If so, delete course participation records and update course
+	 * spots
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
 	 *
-	 * Return true if participating in courses; otherwise, return false
+	 * Post-condition: None
+	 * 
+	 * @param memberNumber
+	 * @return Return true if participating in courses; otherwise, return false
 	 */
 	private boolean isParticipatingInCourses(int memberNumber) {
 		try {
@@ -288,14 +333,23 @@ public class DBClient {
 	}
 
 	/**
+	 * Method addCourse
 	 * 
-	 * @param className
-	 * @param maxParticipant
-	 * @param currentParticipant
-	 * @param startDate
-	 * @param endDate
-	 * @param trainerNumber
-	 * @return
+	 * Purpose: This method adds a tuple to Course relation. It checks that if any
+	 * of the trainers is available. Then, it inserts schedules for the course.
+	 * 
+	 * Pre-condition: Connection to the dbms has been successfully established.
+	 *
+	 * Post-condition: None
+	 * 
+	 * 
+	 * @param className          name of the course
+	 * @param maxParticipant     max number of course participants
+	 * @param currentParticipant current number of participants
+	 * @param startDate          start date
+	 * @param endDate            end date
+	 * @param trainerNumber      trainer number
+	 * @return true if successfull. false otjherwise.
 	 */
 	public boolean addCourse(String className, int maxParticipant, int currentParticipant, Date startDate, Date endDate,
 			List<List<Integer>> schedules) {
@@ -356,6 +410,24 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method getTrainerNumber
+	 * 
+	 * Purpose: Gets an available trainer number for the given course schedules
+	 * 
+	 * Pre-condition: Valid list of course schedules passed in
+	 * 
+	 * Post-condition: Trainer number returned if available, -1 if no trainer
+	 * available
+	 * 
+	 * Logic: - Tries to find a trainer with no assigned courses - If none found,
+	 * finds a trainer not busy during the given schedules - If still none found,
+	 * returns -1
+	 *
+	 * @param schedules List of course schedules
+	 * @return Trainer number if available, -1 if not available
+	 * @throws SQLException If database error occurs
+	 */
 	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException {
 		Statement statement = dbconn.createStatement();
 		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)" + " MINUS" + " (SELECT t.trainerNumber"
@@ -393,6 +465,23 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method deleteCourse
+	 *
+	 * Purpose: Deletes a course and associated records from the database
+	 *
+	 * Pre-condition: Valid course name and start date, connection established
+	 *
+	 * Post-condition: Course and associated enrollments/records deleted
+	 *
+	 * Logic: - Checks if there are enrolled members - Prints enrolled members and
+	 * prevents deletion - Deletes enrollments associated with the course - Deletes
+	 * the course - On error, rolls back transaction
+	 * 
+	 * @param className Name of course to delete
+	 * @param startDate Course start date
+	 * @return True if deleted successfully, false otherwise
+	 */
 	public boolean deleteCourse(String className, Date startDate) {
 		try {
 			dbconn.setAutoCommit(false);
@@ -453,6 +542,18 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method listCoursesInPackage
+	 * 
+	 * Purpose: Gets courses associated with a package
+	 *
+	 * Pre-condition: Valid package name, connection established
+	 *
+	 * Post-condition: List of courses returned
+	 * 
+	 * @param packageName Name of package
+	 * @return List containing courseName and startDate
+	 */
 	public List<String[]> listCoursesInPackage(String packageName) {
 		List<String[]> courses = new ArrayList<>();
 		String query = "SELECT className, startDate FROM umidmuzrapov.CoursePackage WHERE packageName = ?";
@@ -471,6 +572,20 @@ public class DBClient {
 		return courses;
 	}
 
+	/**
+	 * Method removeCourseFromPackage
+	 *
+	 * Purpose: Removes a course from a package
+	 *
+	 * Pre-condition: Valid package name and course info, connection established
+	 *
+	 * Post-condition: Course association removed from database
+	 * 
+	 * @param packageName Package name
+	 * @param className   Course name
+	 * @param startDate   Course start date
+	 * @return True if removed successfully, false otherwise
+	 */
 	public boolean removeCourseFromPackage(String packageName, String className, String startDate) {
 		String deleteQuery = "DELETE FROM umidmuzrapov.CoursePackage WHERE packageName = ? AND className = ? AND startDate = ?";
 
@@ -486,6 +601,19 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method addCourseToPackage
+	 *
+	 * Purpose: Adds a course to an existing package
+	 * 
+	 * Pre-condition: Valid package name, connection established
+	 * 
+	 * Post-condition: Course added to package in database
+	 * 
+	 * @param packageName     Name of package
+	 * @param selectedCourses List of courses to add
+	 * @return True if successful, false otherwise
+	 */
 	public boolean addCourseToPackage(String packageName, String className, String startDate) {
 		String insertQuery = "INSERT INTO umidmuzrapov.CoursePackage (packageName, className, startDate) VALUES (?, ?, ?)";
 
@@ -501,6 +629,18 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method listOngoingCourses
+	 * 
+	 * Purpose: Retrieves a list of all ongoing courses with their start and end
+	 * dates
+	 * 
+	 * Pre-condition: Connection to database established
+	 *
+	 * Post-condition: List of ongoing courses returned
+	 * 
+	 * @return List of string arrays containing courseName, startDate, endDate
+	 */
 	public List<String[]> listOngoingCourses() {
 		List<String[]> ongoingCourses = new ArrayList<>();
 		try {
@@ -520,6 +660,19 @@ public class DBClient {
 		return ongoingCourses;
 	}
 
+	/**
+	 * Method addPackage
+	 *
+	 * Purpose: Adds a new package to the Package table
+	 *
+	 * Pre-condition: Valid package name and price, connection established
+	 * 
+	 * Post-condition: New package inserted into database
+	 *
+	 * @param packageName  Name of the package
+	 * @param packagePrice Price of the package
+	 * @return True if package inserted successfully, false otherwise
+	 */
 	public boolean addPackage(String packageName, int packagePrice) {
 		String insertPackageQuery = "INSERT INTO umidmuzrapov.Package (packageName, cost) VALUES (?, ?)";
 
@@ -534,6 +687,22 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method addCoursePackage
+	 *
+	 * Purpose: Adds selected courses to a package
+	 *
+	 * Pre-condition: Valid package name, valid courses, connection established
+	 *
+	 * Post-condition: Course associations added to database
+	 *
+	 * Logic: - Checks if package exists - Validates each course - Adds courses to
+	 * CoursePackage table - Commits on success, rolls back on failure
+	 *
+	 * @param packageName     Name of package
+	 * @param selectedCourses List of courses to add
+	 * @return True if successful, false otherwise
+	 */
 	public boolean addCoursePackage(String packageName, List<String[]> selectedCourses) {
 		String checkPackageQuery = "SELECT COUNT(*) FROM umidmuzrapov.Package WHERE packageName = ?";
 		String checkCourseQuery = "SELECT COUNT(*) FROM umidmuzrapov.Course WHERE className = ? AND startDate = ?";
@@ -592,6 +761,19 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method updateCoursePackage
+	 *
+	 * Purpose: Updates courses in an existing package
+	 *
+	 * Pre-condition: Valid package name, valid course info, connection established
+	 *
+	 * Post-condition: Package courses updated in database
+	 *
+	 * @param packageName    Name of package
+	 * @param updatedCourses Updated list of package courses
+	 * @return True if successful, false otherwise
+	 */
 	public boolean updateCoursePackage(String packageName, List<String[]> updatedCourses) {
 		try {
 			dbconn.setAutoCommit(false);
@@ -639,6 +821,23 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method canUpdateCoursePackage
+	 * 
+	 * Purpose: Checks if a course package can be updated
+	 *
+	 * Pre-condition: Valid package name and course data, connection established
+	 *
+	 * Post-condition: None
+	 *
+	 * Logic: - Iterates through updated courses - Checks if there are active
+	 * enrollments for each course - Returns false if active enrollments found, true
+	 * if safe to update
+	 * 
+	 * @param packageName    Package name
+	 * @param updatedCourses Updated list of courses
+	 * @return True if package can be updated, false otherwise
+	 */
 	private boolean canUpdateCoursePackage(String packageName, List<String[]> updatedCourses) {
 		try {
 			for (String[] course : updatedCourses) {
@@ -663,6 +862,18 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method deleteCoursePackage
+	 * 
+	 * Purpose: Deletes a course package and associated records
+	 *
+	 * Pre-condition: Valid package name, connection established
+	 *
+	 * Post-condition: Package and associated records removed from database
+	 * 
+	 * @param packageName Name of package
+	 * @return True if deleted successfully, false otherwise
+	 */
 	public boolean deleteCoursePackage(String packageName) {
 		String deleteCoursePackageQuery = "DELETE FROM umidmuzrapov.CoursePackage WHERE packageName = ?";
 		String deletePackageQuery = "DELETE FROM umidmuzrapov.Package WHERE packageName = ?";
@@ -701,6 +912,17 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method queryOne
+	 * 
+	 * Purpose: Gets members with negative account balances
+	 *
+	 * Pre-condition: Database connection initialized
+	 * 
+	 * Post-condition: List of members with negative balances returned
+	 * 
+	 * @return List of member name, phone, and balance info
+	 */
 	public List<String[]> queryOne() {
 		List<String[]> membersWithNegativeBalance = new ArrayList<>();
 		try {
@@ -727,6 +949,18 @@ public class DBClient {
 		return membersWithNegativeBalance;
 	}
 
+	/**
+	 * Method queryTwo
+	 * 
+	 * Purpose: Gets a member's November class schedule
+	 *
+	 * Pre-condition: Valid member number, database connection initialized
+	 *
+	 * Post-condition: November schedule returned
+	 *
+	 * @param memberNumber The member's ID number
+	 * @return List of schedule info for November classes
+	 */
 	public List<String[]> queryTwo(int memberNumber) {
 		List<String[]> novemeberClassSchedule = new ArrayList<>();
 		try {
@@ -757,6 +991,17 @@ public class DBClient {
 		return novemeberClassSchedule;
 	}
 
+	/**
+	 * Method queryThree
+	 *
+	 * Purpose: Gets trainers' working hours in December
+	 *
+	 * Pre-condition: Database connection initialized
+	 *
+	 * Post-condition: List of trainer schedule info returned
+	 * 
+	 * @return Trainer schedule data for December
+	 */
 	public List<String[]> queryThree() {
 		List<String[]> trainerWorkingHours = new ArrayList<>();
 		try {
@@ -808,6 +1053,18 @@ public class DBClient {
 		return trainerWorkingHours;
 	}
 
+	/**
+	 * Method calculateTotalHours 
+	 *  
+	 * Purpose: Calculates total trainer hours for the month
+	 *
+	 * Pre-condition: Valid schedule data passed in
+	 * 
+	 * Post-condition: Trainer total hours map returned
+	 *  
+	 * @param scheduleData List of trainer schedule entries 
+	 * @return Map of trainer IDs to total hours
+	*/ 
 	private Map<String, Integer> calculateTotalHours(List<String[]> scheduleData) {
 		Map<Integer, Integer> dayCounts = countDaysInDecember();
 		Map<String, Integer> trainerTotalHours = new HashMap<>();
@@ -825,6 +1082,17 @@ public class DBClient {
 		return trainerTotalHours;
 	}
 
+	/**
+	 * Method countDaysInDecember
+	 *
+	 * Purpose: Counts number of each weekday in December  
+	 * 
+	 * Pre-condition: None
+	 *
+	 * Post-condition: Weekday count map returned
+	 * 
+	 * @return Map of weekdays to occurrences in December
+	*/
 	private Map<Integer, Integer> countDaysInDecember() {
 		Map<Integer, Integer> dayCounts = new HashMap<>();
 		Calendar cal = Calendar.getInstance();
@@ -839,6 +1107,18 @@ public class DBClient {
 		return dayCounts;
 	}
 
+	/**
+	 * Method printCourseSchedule
+	 *
+	 * Purpose: Prints the course schedule for given member
+	 *
+	 * Pre-condition: Valid first and last names, member exists
+	 *
+	 * Post-condition: Schedule printed to console
+	 *
+	 * @param firstname First name of member
+	 * @param lastname  Last name of member
+	 */
 	public void printCourseSchedule(String firstname, String lastname) throws SQLException {
 
 		int memberNumber = memberExists(firstname, lastname);
@@ -865,6 +1145,19 @@ public class DBClient {
 
 	}
 
+	/**
+	 * Method memberExists
+	 *
+	 * Purpose: Checks if a member with the given first and last names exists
+	 * 
+	 * Pre-condition: Connection established
+	 * 
+	 * Post-condition: Member number returned if member exists, -1 otherwise
+	 *
+	 * @param firstname First name of member
+	 * @param lastname  Last name of member
+	 * @return Member number if exists, -1 otherwise
+	 */
 	public int memberExists(String firstname, String lastname) throws SQLException {
 		Statement statement = dbconn.createStatement();
 		String query = "SELECT * FROM umidmuzrapov.Member" + " WHERE fname='1?' and lname='2?'";
@@ -907,6 +1200,17 @@ public class DBClient {
 		}
 	}
 
+	/**
+	 * Method listAllPackages
+	 * 
+	 * Purpose: Retrieves names of all packages from the database
+	 *
+	 * Pre-condition: Connection established
+	 *
+	 * Post-condition: List of package names returned
+	 * 
+	 * @return List of package name strings
+	 */
 	public List<String> listAllPackages() {
 		List<String> packages = new ArrayList<>();
 		String query = "SELECT packageName FROM umidmuzrapov.Package";
@@ -921,6 +1225,18 @@ public class DBClient {
 		return packages;
 	}
 
+	/**
+	 * Method intToDay  
+	 *
+	 * Purpose: Converts integer day of week to string name
+	 *
+	 * Pre-condition: Valid day of week integer
+	 * 
+	 * Post-condition: String day name returned  
+	 * 
+	 * @param day Integer day of week 
+	 * @return String name for day
+	*/
 	private String intToDay(int day) {
 		switch (day) {
 		case 1:
