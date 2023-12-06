@@ -287,6 +287,7 @@ public class DBClient {
 		return false;
 	}
 
+
 	/**
 	 * 
 	 * @param className
@@ -302,13 +303,14 @@ public class DBClient {
 		try {
 			dbconn.setAutoCommit(false);
 			int trainerNumber = getTrainerNumber(schedules);
-			if (trainerNumber < 0) {
+			if (trainerNumber<0) {
 				System.out.println("No instructor is available for the schedule.");
 				return false;
 			} else {
 				System.out.printf("Trainer with id: %d was chosen for this course.\n", trainerNumber);
+				
 			}
-
+			
 			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
 			PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
 
@@ -320,7 +322,23 @@ public class DBClient {
 			preparedStatement.setInt(6, trainerNumber);
 
 			int rowsAffected = preparedStatement.executeUpdate();
-			return rowsAffected > 0;
+			if (rowsAffected>0) {
+				for (List<Integer> schedule: schedules) {
+					String scheduleInsert = "INSERT INTO umidmuzrapov.Schedule (className, startDate, day, hour, minute, duration) values (?, ?, ?, ?, ?, ?)";
+					preparedStatement = dbconn.prepareStatement(scheduleInsert);
+					preparedStatement.setString(1, className);
+					preparedStatement.setDate(2, new java.sql.Date(startDate.getTime()));
+					preparedStatement.setInt(3, schedule.get(0));
+					preparedStatement.setInt(4, schedule.get(1));
+					preparedStatement.setInt(5, schedule.get(2));
+					preparedStatement.setInt(6, schedule.get(3));
+					preparedStatement.executeUpdate();
+				}
+				
+				System.out.println("The course is added.");
+			}
+			
+			return rowsAffected>0;
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -332,42 +350,48 @@ public class DBClient {
 			return false;
 		} finally {
 			try {
-				dbconn.setAutoCommit(true);
+				dbconn.commit();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
 	}
-
-	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException {
+	
+	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException
+	{
 		Statement statement = dbconn.createStatement();
-		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)" + " MINUS" + " (SELECT t.trainerNumber"
-				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c" + " WHERE t.trainerNumber = c.trainerNumber)";
+		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)"
+				+ " MINUS"
+				+ " (SELECT t.trainerNumber"
+				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c"
+				+ " WHERE t.trainerNumber = c.trainerNumber)";
 
 		ResultSet result = statement.executeQuery(queryOne);
-
+		
 		if (result.next()) {
 			return result.getInt("trainerNumber");
-		} else {
+		}
+		else {
 			StringBuilder queryTwo = new StringBuilder();
-			queryTwo.append("SELECT DISTINCT t.trainerNumber" + " FROM Trainer t"
-					+ " JOIN Course c ON t.trainerNumber = c.trainerNumber"
-					+ " LEFT JOIN Schedule s ON c.className = s.className AND c.startDate = s.startDate"
-					+ " WHERE s.className IS NULL OR NOT (?busy)");
+			queryTwo.append("(SELECT DISTINCT t.trainerNumber FROM umidmuzrapov.Trainer t) "
+					+ " MINUS (SELECT DISTINCT t.trainerNumber"
+					+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c, umidmuzrapov.Schedule s"
+					+ " WHERE t.trainerNumber=c.trainerNumber AND s.className = c.className AND s.startDate = c.startDate"
+					+ " AND (?busy))");
 			StringBuilder busy = new StringBuilder();
-
-			for (List<Integer> schedule : schedules) {
+			
+			for (List<Integer> schedule: schedules) {
 				String busySchedule = "OR (s.day = day? AND s.hour = hour? AND s.minute = minute?) ";
 				busySchedule = busySchedule.replace("day?", String.valueOf(schedule.get(0)));
 				busySchedule = busySchedule.replace("hour?", String.valueOf(schedule.get(1)));
 				busySchedule = busySchedule.replace("minute?", String.valueOf(schedule.get(2)));
 				busy.append(busySchedule);
 			}
-
+			
 			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
 			System.out.println(finalQuery);
 			ResultSet availableTrainer = statement.executeQuery(finalQuery);
-
+			
 			if (availableTrainer.next()) {
 				return availableTrainer.getInt("trainerNumber");
 			} else {
@@ -375,6 +399,7 @@ public class DBClient {
 			}
 		}
 	}
+		
 
 	public boolean deleteCourse(String className, Date startDate) {
 		try {
