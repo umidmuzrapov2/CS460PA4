@@ -134,7 +134,7 @@ public class Main {
 		System.out.println("1. List members with negative balance");
 		System.out.println("2. Check a member's class schedule for November");
 		System.out.println("3. View trainers' working hours for December");
-		System.out.println("4. Custom Query");
+		System.out.println("4. Check a member's all courses and schedule");
 		System.out.print("Select a query: ");
 
 		int query = scanner.nextInt();
