@@ -177,7 +177,12 @@ public class Main {
     		String fname= scanner.nextLine();
     		System.out.println("Enter the lastname");
     		String lname= scanner.nextLine();
-			client.printCourseSchedule(fname, lname);
+			try {
+				client.printCourseSchedule(fname, lname);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			break;
 		default:
 			System.out.println("Invalid query. Please try again.");
