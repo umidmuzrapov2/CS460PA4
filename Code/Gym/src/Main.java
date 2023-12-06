@@ -28,6 +28,7 @@ public class Main {
   public static void main(String[] args) {
     // Create a DBClient instance
     DBClient client = new DBClient(args);
+    
     try (Scanner scanner = new Scanner(System.in)) {
       boolean running = true;
       while (running) {
@@ -248,19 +249,67 @@ public class Main {
     }
   }
 
+
+  /*
+  When adding a course package, the system lists all available courses that have not yet ended, 
+  allowing the admin to select which to include. */
   private static void addCoursePackage(Scanner scanner, DBClient client) {
     System.out.println("Adding a new course package.");
     System.out.print("Enter the name of the course package to add: ");
     String packageName = scanner.nextLine();
+
+    System.out.print("Enter the price of the course package: ");
+    int packagePrice = scanner.nextInt();
+
+    List<String[]> allCourses = client.listOngoingCourses();
+    if (allCourses.isEmpty()) {
+        System.out.println("There are no ongoing courses to add to the package.");
+        return;
+    }
+
     List<String[]> selectedCourses = new ArrayList<>();
+    System.out.println("Select courses to add to the package (Enter the class name to select, 'done' to finish):");
+    for (int i = 0; i < allCourses.size(); i++) {
+        System.out.println((i + 1) + ". " + allCourses.get(i)[0]);
+    }
 
-    client.addCoursePackage(packageName, selectedCourses);
-    // Additional logic to input course package details
-    // Method to be implemented here to list course packages
+    String input;
+    while (!(input = scanner.nextLine()).equalsIgnoreCase("done")) {
+        boolean courseFound = false;
+        for (String[] course : allCourses) {
+            if (course[0].equalsIgnoreCase(input)) {
+                if (selectedCourses.contains(course)) {
+                    System.out.println(input + " has already been added.");
+                } else {
+                    selectedCourses.add(course);
+                    System.out.println(input + " added.");
+                }
+                courseFound = true;
+                break;
+            }
+        }
+        if (!courseFound) {
+            System.out.println("Course not found. Please enter a valid course name.");
+        }
+        System.out.println("Enter next course or 'done':");
+    }
 
-    // Call DBClient method to add the course package
-    // client.addCoursePackage(packageDetails);
-  }
+    if (selectedCourses.isEmpty()) {
+        System.out.println("No courses were selected.");
+    } else {
+        if (!client.addPackage(packageName, packagePrice)) {
+          System.out.println("Failed to add package: " + packageName);
+          return;
+        }
+        boolean result = client.addCoursePackage(packageName, selectedCourses);
+        if (result) {
+            System.out.println("Course package added successfully.");
+        } else {
+            System.out.println("Failed to add course package.");
+        }
+    }
+}
+
 
   private static void updateCoursePackage(Scanner scanner, DBClient client) {
     System.out.println("Updating a course package.");
