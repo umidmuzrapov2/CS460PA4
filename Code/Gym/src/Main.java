@@ -372,17 +372,27 @@ public class Main {
 	}
 
 	private static void deleteCoursePackage(Scanner scanner, DBClient client) {
-		System.out.println("Deleting a course package.");
-		// First, list all available course packages to select from
-		// Will be implemented
-		// client.listCoursePackages();
+    System.out.println("Select a course package to delete:");
+    List<String> packages = client.listAllPackages();
+    for (int i = 0; i < packages.size(); i++) {
+        System.out.println((i + 1) + ". " + packages.get(i));
+    }
 
-		System.out.print("Enter the name of the course package to delete: ");
-		String packageName = scanner.nextLine();
-		List<String[]> selectedCourses;
+    int choice = scanner.nextInt();
+    scanner.nextLine();  // Consume the newline left-over
+    if (choice < 1 || choice > packages.size()) {
+        System.out.println("Invalid choice. Operation cancelled.");
+        return;
+    }
 
-		client.deleteCoursePackage(packageName);
-	}
+    String packageName = packages.get(choice - 1);
+    if (client.deleteCoursePackage(packageName)) {
+        System.out.println("Package '" + packageName + "' deleted successfully.");
+    } else {
+        System.out.println("Failed to delete package.");
+    }
+}
+
 
 	private static List<List<Integer>> getSchedule() {
 		System.out.println("Enter the schedule for course or done:");

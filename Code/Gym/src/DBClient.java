@@ -617,55 +617,41 @@ public class DBClient {
 	}
 
 	public boolean deleteCoursePackage(String packageName) {
-		try {
-			dbconn.setAutoCommit(false);
+		String deleteCoursePackageQuery = "DELETE FROM umidmuzrapov.CoursePackage WHERE packageName = ?";
+    String deletePackageQuery = "DELETE FROM umidmuzrapov.Package WHERE packageName = ?";
 
-			if (!canDeleteCoursePackage(packageName)) {
-				// Handle the case where deletion is not possible
-				return false;
-			}
+    try {
+        dbconn.setAutoCommit(false);
 
-			// Assuming safeguard check passed:
-			String deleteQuery = "delete from umidmuzrapov.coursepackage where packageName = ?";
-			PreparedStatement preparedStatement = dbconn.prepareStatement(deleteQuery);
-			preparedStatement.setString(1, packageName);
-			int rowsAffected = preparedStatement.executeUpdate();
+        // Delete course packages
+        try (PreparedStatement preparedStatement = dbconn.prepareStatement(deleteCoursePackageQuery)) {
+            preparedStatement.setString(1, packageName);
+            preparedStatement.executeUpdate();
+        }
 
-			dbconn.commit();
-			return rowsAffected > 0;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			try {
-				dbconn.rollback();
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-			}
-			return false;
-		} finally {
-			try {
-				dbconn.setAutoCommit(true);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        // Delete package
+        try (PreparedStatement preparedStatement = dbconn.prepareStatement(deletePackageQuery)) {
+            preparedStatement.setString(1, packageName);
+            preparedStatement.executeUpdate();
+        }
 
-	private boolean canDeleteCoursePackage(String packageName) {
-		try {
-			String checkQuery = "select count(*) from umidmuzrapov.enrollment e join umidmuzrapov.coursepackage cp on e.courseName = cp.className and e.startDate = cp.startDate where cp.packageName = ?";
-			PreparedStatement checkStmt = dbconn.prepareStatement(checkQuery);
-			checkStmt.setString(1, packageName);
-			ResultSet rs = checkStmt.executeQuery();
-
-			if (rs.next() && rs.getInt(1) > 0) {
-				// There are active enrollments in this package's courses
-				return false;
-			}
-			return true; // Safe to delete the package
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+        dbconn.commit();
+        return true;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        try {
+            dbconn.rollback();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    } finally {
+        try {
+            dbconn.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 	}
 
 	public List<String[]> queryOne() {
@@ -791,6 +777,20 @@ public class DBClient {
 				return -1;
 			}
 		}
+	}
+
+	public List<String> listAllPackages() {
+		List<String> packages = new ArrayList<>();
+		String query = "SELECT packageName FROM umidmuzrapov.Package";
+		try (PreparedStatement preparedStatement = dbconn.prepareStatement(query);
+			ResultSet resultSet = preparedStatement.executeQuery()) {
+			while (resultSet.next()) {
+				packages.add(resultSet.getString("packageName"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return packages;
 	}
 
 	private String intToDay(int day) {
