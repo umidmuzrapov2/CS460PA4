@@ -1,4 +1,5 @@
 import java.sql.Date;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.Scanner;
 
@@ -154,6 +155,16 @@ public class Main {
         break;
       case 4:
         // Call method to handle custom query
+    	try {
+    		System.out.println("Enter the firsname");
+    		String fname= scanner.nextLine();
+    		System.out.println("Enter the lastname");
+    		String lname= scanner.nextLine();
+			client.printCourseSchedule(fname, lname);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
+		}
         break;
       default:
         System.out.println("Invalid query. Please try again.");

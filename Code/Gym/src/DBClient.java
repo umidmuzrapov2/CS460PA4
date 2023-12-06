@@ -345,14 +345,14 @@ public class DBClient {
 			try {
 				dbconn.rollback();
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				System.out.println(e.getMessage());
 			}
 			return false;
 		} finally {
 			try {
 				dbconn.commit();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				System.out.println(e.getMessage());
 			}
 		}
 	}
@@ -389,7 +389,6 @@ public class DBClient {
 			}
 			
 			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
-			System.out.println(finalQuery);
 			ResultSet availableTrainer = statement.executeQuery(finalQuery);
 			
 			if (availableTrainer.next()) {
@@ -669,13 +668,14 @@ public class DBClient {
 
 		int memberNumber = memberExists(firstname, lastname);
 		if (memberNumber < 0) {
+			System.out.println("No member with this name exists.");
 			return;
 		}
 
-		String query = String.format("SELECT c.courseName, c.startDate, s.day, s.hour, s.minute, s.duration"
-				+ "FROM umidmuzrapov.Member m, umidmuzrapov.Course c, umidmuzrapov.Enrollment e, umidmuzrapov.Schedule s"
-				+ "WHERE m.memberNumber=e.memberNumber AND m.memberNumber=%d"
-				+ " AND c.courseName=e.courseName AND c.startDate=e.startDate AND s.courseName=c.courseName AND s.startDate=c.startDate",
+		String query = String.format("SELECT c.className, c.startDate, s.day, s.hour, s.minute, s.duration"
+				+ " FROM umidmuzrapov.Member m, umidmuzrapov.Course c, umidmuzrapov.Enrollment e, umidmuzrapov.Schedule s"
+				+ " WHERE m.memberNumber=e.memberNumber AND m.memberNumber=%d"
+				+ " AND c.className=e.courseName AND c.startDate=e.startDate AND s.className=c.className AND s.startDate=c.startDate",
 				memberNumber);
 
 		Statement statement = dbconn.createStatement();
@@ -683,7 +683,7 @@ public class DBClient {
 
 		System.out.printf("Schedule for %s %s\n", firstname, lastname);
 		while (result.next()) {
-			System.out.printf("Course %s. %s, %d:%d. Duration: %d.\n", result.getString("courseName"),
+			System.out.printf("Course %s. %s, %d:%d. Duration: %d.\n", result.getString("className"),
 					intToDay(result.getInt("day")), result.getInt("hour"), result.getInt("minute"),
 					result.getInt("duration"));
 		}
@@ -692,8 +692,8 @@ public class DBClient {
 
 	public int memberExists(String firstname, String lastname) throws SQLException {
 		Statement statement = dbconn.createStatement();
-		String query = "SELECT * FROM umidmuzrapov.Member" + " WHERE fname=1? and lname=2?";
-		query.replace("1?", firstname).replace("?2", lastname);
+		String query = "SELECT * FROM umidmuzrapov.Member" + " WHERE fname='1?' and lname='2?'";
+		query = query.replace("1?", firstname).replace("2?", lastname);
 		ResultSet result = statement.executeQuery(query);
 		ArrayList<Integer> memberNumbers = new ArrayList<Integer>();
 
@@ -703,7 +703,7 @@ public class DBClient {
 		}
 
 		if (memberNumbers.size() == 0) {
-			return 0;
+			return -1;
 		} else if (memberNumbers.size() == 1) {
 			return memberNumbers.remove(0);
 		} else {
