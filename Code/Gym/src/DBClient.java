@@ -287,7 +287,6 @@ public class DBClient {
 		return false;
 	}
 
-
 	/**
 	 * 
 	 * @param className
@@ -303,14 +302,14 @@ public class DBClient {
 		try {
 			dbconn.setAutoCommit(false);
 			int trainerNumber = getTrainerNumber(schedules);
-			if (trainerNumber<0) {
+			if (trainerNumber < 0) {
 				System.out.println("No instructor is available for the schedule.");
 				return false;
 			} else {
 				System.out.printf("Trainer with id: %d was chosen for this course.\n", trainerNumber);
-				
+
 			}
-			
+
 			String insertQuery = "insert into umidmuzrapov.course (className, maxParticipant, currentParticipant, startDate, endDate, trainerNumber) values (?, ?, ?, ?, ?, ?)";
 			PreparedStatement preparedStatement = dbconn.prepareStatement(insertQuery);
 
@@ -322,8 +321,8 @@ public class DBClient {
 			preparedStatement.setInt(6, trainerNumber);
 
 			int rowsAffected = preparedStatement.executeUpdate();
-			if (rowsAffected>0) {
-				for (List<Integer> schedule: schedules) {
+			if (rowsAffected > 0) {
+				for (List<Integer> schedule : schedules) {
 					String scheduleInsert = "INSERT INTO umidmuzrapov.Schedule (className, startDate, day, hour, minute, duration) values (?, ?, ?, ?, ?, ?)";
 					preparedStatement = dbconn.prepareStatement(scheduleInsert);
 					preparedStatement.setString(1, className);
@@ -334,11 +333,11 @@ public class DBClient {
 					preparedStatement.setInt(6, schedule.get(3));
 					preparedStatement.executeUpdate();
 				}
-				
+
 				System.out.println("The course is added.");
 			}
-			
-			return rowsAffected>0;
+
+			return rowsAffected > 0;
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -356,22 +355,17 @@ public class DBClient {
 			}
 		}
 	}
-	
-	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException
-	{
+
+	private int getTrainerNumber(List<List<Integer>> schedules) throws SQLException {
 		Statement statement = dbconn.createStatement();
-		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)"
-				+ " MINUS"
-				+ " (SELECT t.trainerNumber"
-				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c"
-				+ " WHERE t.trainerNumber = c.trainerNumber)";
+		String queryOne = "(SELECT t.trainerNumber FROM umidmuzrapov.Trainer t)" + " MINUS" + " (SELECT t.trainerNumber"
+				+ " FROM umidmuzrapov.Trainer t, umidmuzrapov.Course c" + " WHERE t.trainerNumber = c.trainerNumber)";
 
 		ResultSet result = statement.executeQuery(queryOne);
-		
+
 		if (result.next()) {
 			return result.getInt("trainerNumber");
-		}
-		else {
+		} else {
 			StringBuilder queryTwo = new StringBuilder();
 			queryTwo.append("(SELECT DISTINCT t.trainerNumber FROM umidmuzrapov.Trainer t) "
 					+ " MINUS (SELECT DISTINCT t.trainerNumber"
@@ -379,18 +373,18 @@ public class DBClient {
 					+ " WHERE t.trainerNumber=c.trainerNumber AND s.className = c.className AND s.startDate = c.startDate"
 					+ " AND (?busy))");
 			StringBuilder busy = new StringBuilder();
-			
-			for (List<Integer> schedule: schedules) {
+
+			for (List<Integer> schedule : schedules) {
 				String busySchedule = "OR (s.day = day? AND s.hour = hour? AND s.minute = minute?) ";
 				busySchedule = busySchedule.replace("day?", String.valueOf(schedule.get(0)));
 				busySchedule = busySchedule.replace("hour?", String.valueOf(schedule.get(1)));
 				busySchedule = busySchedule.replace("minute?", String.valueOf(schedule.get(2)));
 				busy.append(busySchedule);
 			}
-			
+
 			String finalQuery = queryTwo.toString().replace("?busy", busy.toString().replaceFirst("OR", ""));
 			ResultSet availableTrainer = statement.executeQuery(finalQuery);
-			
+
 			if (availableTrainer.next()) {
 				return availableTrainer.getInt("trainerNumber");
 			} else {
@@ -398,7 +392,6 @@ public class DBClient {
 			}
 		}
 	}
-		
 
 	public boolean deleteCourse(String className, Date startDate) {
 		try {
@@ -642,14 +635,14 @@ public class DBClient {
 		List<String[]> membersWithNegativeBalance = new ArrayList<>();
 		try {
 			// SQL query to find members with negative balance
-			String query = "select m.fname, m.lname, m.phoneNumber, SUM(t.total) as balance "
-					+ "from umidmuzrapov.member m "
-					+ "join umidmuzrapov.transaction t on m.memberNumber = t.memberNumber "
-					+ "group by m.fname, m.lname, m.phoneNumber " + "having SUM(t.total) < 0";
+			String query = "select m.fname, m.lname, m.phoneNumber, "
+					+ "SUM(case when t.type = 'deposit' then t.total else -t.total end) as balance from "
+					+ "umidmuzrapov.member m join umidmuzrapov.transaction t on m.memberNumber = t.memberNumber group by "
+					+ "m.memberNumber, m.fname, m.lname, m.phoneNumber having SUM(case when t.type = 'deposit' "
+					+ "then t.total else -t.total end) < 0";
 
-			PreparedStatement preparedStatement = dbconn.prepareStatement(query);
-			ResultSet resultSet = preparedStatement.executeQuery();
-
+			Statement statement = dbconn.createStatement();
+			ResultSet resultSet = statement.executeQuery(query);
 			while (resultSet.next()) {
 				String firstName = resultSet.getString("fname");
 				String lastName = resultSet.getString("lname");
@@ -662,6 +655,37 @@ public class DBClient {
 			e.printStackTrace();
 		}
 		return membersWithNegativeBalance;
+	}
+
+	public List<String[]> queryTwo(int memberNumber) {
+		List<String[]> novemeberClassSchedule = new ArrayList<>();
+		try {
+			String query = String.format(
+					"select e.courseName, c.startDate, c.endDate, s.day, s.hour, s.minute, s.duration "
+							+ "from umidmuzrapov.enrollment e join umidmuzrapov.course c on e.courseName = c.className and e.startDate = c.startDate "
+							+ "join umidmuzrapov.schedule s on c.className = s.className and c.startDate = s.startDate where e.memberNumber = %d "
+							+ "and c.startDate <= TO_DATE('30-11-2023', 'DD-MM-YYYY') and c.endDate >= TO_DATE('01-11-2023', 'DD-MM-YYYY')",
+					memberNumber);
+
+			Statement statement = dbconn.createStatement();
+			ResultSet resultSet = statement.executeQuery(query);
+			while (resultSet.next()) {
+				String courseName = resultSet.getString("courseName");
+				Date startDate = resultSet.getDate("startDate");
+				Date endDate = resultSet.getDate("endDate");
+				int day = resultSet.getInt("day");
+				int hour = resultSet.getInt("hour");
+				int minute = resultSet.getInt("minute");
+				int duration = resultSet.getInt("duration");
+
+				novemeberClassSchedule
+						.add(new String[] { courseName, startDate.toString(), endDate.toString(), intToDay(day),
+								Integer.toString(hour), Integer.toString(minute), Integer.toString(duration) });
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return novemeberClassSchedule;
 	}
 
 	public void printCourseSchedule(String firstname, String lastname) throws SQLException {
