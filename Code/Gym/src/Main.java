@@ -279,6 +279,7 @@ public class Main {
     System.out.println("2. Check a member's class schedule for November");
     System.out.println("3. View trainers' working hours for December");
     System.out.println("4. Check a member's all courses and schedule");
+    System.out.println("5. Get borrowed equipment for a member.");
     System.out.print("Select a query: ");
 
     int query = scanner.nextInt();
@@ -373,6 +374,12 @@ public class Main {
           e.printStackTrace();
         }
         break;
+		case 5:
+			System.out.println("Enter member number:");
+			int memberId = scanner.nextInt();
+			scanner.nextLine();
+			client.printBorrowedEquipmentInfo(memberId);
+			break;
       default:
         System.out.println("Invalid query. Please try again.");
     }

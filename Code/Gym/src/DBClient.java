@@ -299,7 +299,53 @@ public class DBClient {
     }
     return "Member cannot be deleted."; // Member deletion failed
   }
+  
+  /**
+   * Method printBorrowedEquipmentInfo
+   * 
+   * Purpose: Prints information about equipment borrowed by a member  
+   *
+   * Pre-condition: Valid member number, database connection initialized
+   *
+   * Post-condition: Borrowed equipment info printed to console
+   *  
+   * Logic:
+   * - Executes SQL query to get borrowed equipment data 
+   * - Prints out equipment name, quantity, borrowed date and returned date
+   *
+   * @param memberNumber The member ID to query for 
+  */
+  public void printBorrowedEquipmentInfo(int memberNumber) {
+      try {
 
+          // SQL query to retrieve equipment information for a given member
+          String query = "SELECT e.descriptionComment AS equipmentName, el.quantity, el.borrowedDate, el.returnedDate " +
+                         "FROM Equipment e " +
+                         "JOIN EquipmentLoan el ON e.itemNumber = el.itemNumber " +
+                         "WHERE el.memberItem = ?";
+
+          try (PreparedStatement preparedStatement = dbconn.prepareStatement(query)) {
+              preparedStatement.setInt(1, memberNumber);
+
+              // Execute the query
+              ResultSet resultSet = preparedStatement.executeQuery();
+
+              // Print the results
+              System.out.println("Equipment borrowed by Member ID " + memberNumber + ":");
+              while (resultSet.next()) {
+                  String equipmentName = resultSet.getString("equipmentName");
+                  int quantity = resultSet.getInt("quantity");
+                  Date borrowedDate = resultSet.getDate("borrowedDate");
+                  Date returnedDate = resultSet.getDate("returnedDate");
+
+                  System.out.println("Equipment: " + equipmentName + ", Quantity: " + quantity+ "Borrowed date: " + borrowedDate.toGMTString() + ", Returned date: " + returnedDate.toGMTString());
+              }
+          }
+      } catch (SQLException e) {
+          e.printStackTrace();
+      }
+  }
+  
   /**
    *
    * Method hasUnreturnedEquipment
